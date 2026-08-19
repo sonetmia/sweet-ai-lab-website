@@ -27,7 +27,7 @@ create table if not exists public.profiles (
   display_name text,
   role public.app_role not null default 'user',
   plan public.plan_name not null default 'free',
-  credits integer not null default 10 check (credits >= 0),
+  credits integer not null default 500 check (credits >= 0),
   credit_expires_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -44,6 +44,13 @@ create table if not exists public.credit_ledger (
 );
 
 create index if not exists credit_ledger_user_created_idx on public.credit_ledger (user_id, created_at desc);
+
+alter table public.profiles alter column credits set default 500;
+update public.profiles profile
+set credits = 500
+where profile.plan = 'free'
+  and profile.credits = 10
+  and not exists (select 1 from public.credit_ledger ledger where ledger.user_id = profile.id);
 
 create table if not exists public.payment_requests (
   id uuid primary key default gen_random_uuid(),
@@ -102,7 +109,7 @@ begin
     coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(coalesce(new.email, 'User'), '@', 1)),
     case when lower(coalesce(new.email, '')) = lower(coalesce(current_setting('app.admin_email', true), '')) then 'admin'::public.app_role else 'user'::public.app_role end,
     'free'::public.plan_name,
-    10
+    500
   )
   on conflict (id) do update
   set email = excluded.email,

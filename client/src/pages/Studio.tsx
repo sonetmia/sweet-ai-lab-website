@@ -23,11 +23,9 @@ import {
   Plus,
   Settings2,
   SlidersHorizontal,
-  Sparkles,
   Sun,
   Trash2,
   UploadCloud,
-  WandSparkles,
   X,
 } from "lucide-react";
 import { DragEvent, useEffect, useRef, useState } from "react";
@@ -39,7 +37,7 @@ type QueueItem = { id: string; file: File; preview: string; status: "queued" | "
 type Credits = { credits: number; plan: string; expired: boolean; expiresAt: string | null };
 type ApiMode = "paid" | "free";
 
-const initialCredits: Credits = { credits: 10, plan: "Free", expired: false, expiresAt: null };
+const initialCredits: Credits = { credits: 500, plan: "Free", expired: false, expiresAt: null };
 
 function wordLabel(value: number) {
   return `${value} words`;
@@ -58,7 +56,7 @@ export default function Studio() {
   const [items, setItems] = useState<QueueItem[]>([]);
   const [dragging, setDragging] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => localStorage.getItem("sweet-theme") !== "light");
   const [accountOpen, setAccountOpen] = useState(false);
   const [titleRange, setTitleRange] = useState([6, 12]);
   const [keywordRange, setKeywordRange] = useState([35, 40]);
@@ -95,6 +93,7 @@ export default function Studio() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
+    localStorage.setItem("sweet-theme", dark ? "dark" : "light");
   }, [dark]);
 
   async function refreshCredits() {
@@ -201,7 +200,7 @@ export default function Studio() {
   return (
     <div className={`studio-shell ${dark ? "studio-dark" : ""}`}>
       <header className="studio-header">
-        <div className="studio-header-left"><a className="studio-brand" href="/"><span><Sparkles size={15} /></span> Sweet AI Lab by SONET</a><button className="icon-button" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle studio controls"><PanelLeft size={17} /></button></div>
+        <div className="studio-header-left"><a className="studio-brand" href="/"><span className="brand-s">S</span> Sweet AI Lab by SONET</a><button className="icon-button" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle studio controls"><PanelLeft size={17} /></button></div>
         <div className="studio-header-right"><span className="studio-credit"><i /> {credits.expired ? "Credits expired" : `${credits.credits.toLocaleString()} credits`}</span><button className="header-link">AI-Powered Tools for Creators</button><button className="header-link">Contact</button><button className="header-link" onClick={() => navigate("/billing")}>Pricing</button><button className="api-button" onClick={() => setApiModalOpen(true)}><KeyRound size={15} /> API keys</button><button className="icon-button" onClick={() => setDark(!dark)} aria-label="Toggle color theme">{dark ? <Sun size={16} /> : <Moon size={16} />}</button><button className="avatar-button" onClick={() => setAccountOpen(!accountOpen)} aria-expanded={accountOpen}><CircleUserRound size={20} /></button>{accountOpen && <div className="account-menu"><span className="account-email">{email}</span><div><b>{credits.plan}</b><span>{credits.credits.toLocaleString()} credits</span></div><button className="account-admin" onClick={() => navigate("/admin")}>Administrator console</button><button onClick={signOut}><LogOut size={14} /> Sign out</button></div>}</div>
       </header>
       <div className="studio-layout">
@@ -213,9 +212,9 @@ export default function Studio() {
           </div>
           <div className="side-panel">
             {activeTab === "mode" && <>
-              <p className="side-label">Creation mode</p><div className="mode-picker"><button className={mode === "metadata" ? "selected" : ""} onClick={() => setMode("metadata")}><FileText size={16} /><span>Metadata</span></button><button className={mode === "prompt" ? "selected" : ""} onClick={() => setMode("prompt")}><WandSparkles size={16} /><span>Img → Prompt</span></button></div>
+              <p className="side-label">Creation mode</p><div className="mode-picker"><button className={mode === "metadata" ? "selected" : ""} onClick={() => setMode("metadata")}><FileText size={16} /><span>Metadata</span></button><button className={mode === "prompt" ? "selected" : ""} onClick={() => setMode("prompt")}><ImageIcon size={16} /><span>Img → Prompt</span></button></div>
               {mode === "prompt" && <label className="field-label">Prompt style<select value={promptStyle} onChange={(event) => setPromptStyle(event.target.value as (typeof promptStyles)[number])}>{promptStyles.map((style) => <option key={style}>{style}</option>)}</select></label>}
-              <div className="side-note"><Sparkles size={14} /><p>{mode === "metadata" ? "Generate structured, export-ready metadata tailored to the selected platform." : "Describe the visual language of an image in a ready-to-reuse generation prompt."}</p></div>
+              <div className="side-note"><p>{mode === "metadata" ? "Generate structured, export-ready metadata tailored to the selected platform." : "Describe the visual language of an image in a ready-to-reuse generation prompt."}</p></div>
             </>}
             {activeTab === "customize" && <>
               <div className="panel-title-row"><p className="side-label">Output calibration</p><button onClick={() => { setTitleRange([6, 12]); setKeywordRange([35, 40]); setDescriptionRange([12, 30]); }}>Reset</button></div>

@@ -45,3 +45,8 @@
 - [x] Display the requested Gmail address in the public contact section and payment-facing contact information.
 - [x] Change the Pro plan price from ৳400 to ৳200 consistently across the landing page, billing workflow, database plan activation, and payment request messages.
 - [ ] Deploy the OpenRouter, contact, and ৳200 Pro price update, then validate a live image-to-prompt request with a browser-session OpenRouter key.
+- [x] Change the initial Free credit allocation from 10 to 500 for new user profiles and align the displayed Free plan balance.
+- [x] Add a browser-based Image Upscaler above Background Remover with 2x/4x processing, downloadable output, and a two-credit post-success deduction.
+- [x] Set a non-white default theme while preserving the existing dark theme option.
+- [x] Remove AI/star/glowing decorative icons from user-facing screens and replace the brand icon with a calligraphic S mark.
+- [ ] Test, push, and deploy the complete credit, upscaler, theme, and branding update through GitHub and Vercel.
