@@ -1,5 +1,6 @@
 export const freeProviders = ["Gemini", "Groq", "Mistral", "OpenAI", "OpenRouter"] as const;
 export type FreeProvider = (typeof freeProviders)[number];
+export const openRouterFreeVisionModel = "nvidia/nemotron-nano-12b-v2-vl:free";
 type ApiKeyStore = Partial<Record<FreeProvider, string[]>>;
 
 let sessionKeyStore: ApiKeyStore = {};
@@ -52,9 +53,18 @@ export async function generateWithFreeApi(provider: FreeProvider, prompt: string
       ? { url: "https://api.mistral.ai/v1/chat/completions", model: "mistral-small-latest" }
       : provider === "OpenAI"
         ? { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" }
-        : { url: "https://openrouter.ai/api/v1/chat/completions", model: "meta-llama/llama-4-scout" };
+        : { url: "https://openrouter.ai/api/v1/chat/completions", model: openRouterFreeVisionModel };
   const response = await fetch(config.url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, ...(provider === "OpenRouter" ? { "HTTP-Referer": window.location.origin, "X-Title": "Sweet AI Lab by SONET" } : {}) }, body: JSON.stringify({ model: config.model, messages: [{ role: "user", content }], max_tokens: 1200 }) });
-  if (!response.ok) throw new Error(`${provider} request failed (${response.status}).`);
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const errorPayload = await response.json() as { error?: { message?: string }; message?: string };
+      detail = errorPayload.error?.message ?? errorPayload.message ?? "";
+    } catch {
+      // Preserve the status-only fallback when a provider does not return JSON.
+    }
+    throw new Error(`${provider} request failed (${response.status})${detail ? `: ${detail}` : "."}`);
+  }
   const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   return data.choices?.[0]?.message?.content ?? "";
 }

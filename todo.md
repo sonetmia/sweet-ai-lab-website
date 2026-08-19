@@ -37,5 +37,11 @@
 - [ ] Add the Vercel production domain to Supabase Site URL and the required studio redirect URL to Additional Redirect URLs.
 - [ ] Confirm Google OAuth production callback and run a production sign-in readiness check.
 - [x] Diagnose the Vercel production blank-screen failure at sweet-ai-lab-website.vercel.app: the deployed Vite bundle has no embedded Supabase URL or public key and therefore throws the missing browser configuration guard before React can mount.
-- [ ] Apply and deploy the smallest fix that restores production rendering without changing application features.
-- [ ] Verify the repaired production landing page before resuming Google OAuth sign-in testing.
+- [x] Apply and deploy the smallest fix that restores production rendering without changing application features.
+- [x] Verify the repaired production landing page before resuming Google OAuth sign-in testing.
+- [x] Verify that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are saved under the Vercel Production environment rather than only Preview or Development.
+- [ ] Trigger and confirm a fresh production deployment that includes the configured browser variables instead of the stale index-BHYExqor.js bundle.
+- [x] Diagnose and correct the OpenRouter Free API image-to-prompt failure by selecting a current free vision-capable OpenRouter model and surfacing provider error details.
+- [x] Display the requested Gmail address in the public contact section and payment-facing contact information.
+- [x] Change the Pro plan price from ৳400 to ৳200 consistently across the landing page, billing workflow, database plan activation, and payment request messages.
+- [ ] Deploy the OpenRouter, contact, and ৳200 Pro price update, then validate a live image-to-prompt request with a browser-session OpenRouter key.

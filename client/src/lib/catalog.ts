@@ -22,6 +22,6 @@ export const promptStyles = [
 
 export const plans = {
   free: { name: "Free", credits: 10, price: "৳0", description: "A thoughtful starting point for testing the workflow." },
-  pro: { name: "Pro", credits: 6000, price: "৳400", description: "For steady, repeatable contributor production." },
+  pro: { name: "Pro", credits: 6000, price: "৳200", description: "For steady, repeatable contributor production." },
   max: { name: "Max", credits: 8000, price: "৳500", description: "For high-volume stock workflows and teams." },
 } as const;

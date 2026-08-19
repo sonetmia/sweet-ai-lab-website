@@ -49,7 +49,7 @@ create table if not exists public.payment_requests (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   requested_plan public.plan_name not null check (requested_plan in ('pro', 'max')),
-  amount_bdt integer not null check (amount_bdt in (400, 500)),
+  amount_bdt integer not null check (amount_bdt in (200, 400, 500)),
   bkash_number text not null,
   transaction_id text not null,
   status public.payment_status not null default 'pending',
@@ -62,6 +62,9 @@ create table if not exists public.payment_requests (
 );
 
 create index if not exists payment_requests_status_created_idx on public.payment_requests (status, created_at desc);
+
+alter table public.payment_requests drop constraint if exists payment_requests_amount_bdt_check;
+alter table public.payment_requests add constraint payment_requests_amount_bdt_check check (amount_bdt in (200, 400, 500));
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -239,7 +242,7 @@ begin
   end if;
 
   insert into public.payment_requests (user_id, requested_plan, amount_bdt, bkash_number, transaction_id)
-  values (auth.uid(), p_plan, case when p_plan = 'pro' then 400 else 500 end, normalized_number, normalized_transaction)
+  values (auth.uid(), p_plan, case when p_plan = 'pro' then 200 else 500 end, normalized_number, normalized_transaction)
   returning id into request_id;
 
   select email into current_email from public.profiles where id = auth.uid();

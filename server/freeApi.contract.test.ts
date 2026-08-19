@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createFreePrompt, freeProviders, normalizeMetadata } from "../client/src/lib/freeApi";
+import { createFreePrompt, freeProviders, normalizeMetadata, openRouterFreeVisionModel } from "../client/src/lib/freeApi";
 
 describe("Free API mode contract", () => {
   it("keeps the exact provider catalog in the required order", () => {
     expect(freeProviders).toEqual(["Gemini", "Groq", "Mistral", "OpenAI", "OpenRouter"]);
+    expect(openRouterFreeVisionModel).toBe("nvidia/nemotron-nano-12b-v2-vl:free");
   });
 
   it("builds metadata constraints and normalizes fenced JSON output", () => {
