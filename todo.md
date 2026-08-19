@@ -33,3 +33,9 @@
 - [x] Transfer the complete Sweet AI Lab by SONET source, Supabase schema, Vercel configuration, and deployment documentation without committing secrets.
 - [x] Verify the GitHub commit and report the Vercel import steps.
 - [x] Send the user the exact Vercel import, environment-variable, Supabase, and Google OAuth production configuration sequence.
+- [ ] Verify Supabase dashboard access and production URL configuration for the deployed Sweet AI Lab application.
+- [ ] Add the Vercel production domain to Supabase Site URL and the required studio redirect URL to Additional Redirect URLs.
+- [ ] Confirm Google OAuth production callback and run a production sign-in readiness check.
+- [x] Diagnose the Vercel production blank-screen failure at sweet-ai-lab-website.vercel.app: the deployed Vite bundle has no embedded Supabase URL or public key and therefore throws the missing browser configuration guard before React can mount.
+- [ ] Apply and deploy the smallest fix that restores production rendering without changing application features.
+- [ ] Verify the repaired production landing page before resuming Google OAuth sign-in testing.
