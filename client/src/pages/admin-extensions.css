@@ -1,0 +1,2 @@
+.admin-actions { display: grid; gap: 13px; }.activate-card { border-color: #d5e5d7; background: linear-gradient(145deg, #f9fffa, #edf8ef); }.activate-card h2 { color: #27764d; }.activate-card > button { background: #266f49; }.studio-dark .admin-actions { color: #edf5ef; }
+@media (max-width: 850px) { .admin-actions { grid-template-columns: 1fr; } }

@@ -1,0 +1,21 @@
+.app-theme-toggle { display: inline-grid; place-items: center; width: 31px; height: 31px; padding: 0; border: 1px solid #d9e6db; border-radius: 8px; color: #4e7260; background: #fff; }
+.billing-header, .admin-header { grid-template-columns: 1fr auto 1fr auto; }
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="dark"] body { background: #12271d; color: #eaf4ec; }
+html[data-theme="dark"] .site-shell { background: #12271d; color: #eaf4ec; }
+html[data-theme="dark"] .landing-header, html[data-theme="dark"] .platform-strip { background: rgba(18,39,29,.88); border-color: #2c4b38; }
+html[data-theme="dark"] .brand, html[data-theme="dark"] .hero h1, html[data-theme="dark"] .section-intro h2, html[data-theme="dark"] .plans-heading h2, html[data-theme="dark"] .closing-section h2, html[data-theme="dark"] .tool-card h3 { color: #edf6ee; }
+html[data-theme="dark"] .hero-lead, html[data-theme="dark"] .section-intro > p, html[data-theme="dark"] .plans-heading > p, html[data-theme="dark"] .tool-card > p:not(.tool-eyebrow), html[data-theme="dark"] .platform-inner b, html[data-theme="dark"] .platform-inner > span, html[data-theme="dark"] .main-nav a, html[data-theme="dark"] .text-button { color: #b4cbb9; }
+html[data-theme="dark"] .hero-art, html[data-theme="dark"] .tool-card, html[data-theme="dark"] .plan-card, html[data-theme="dark"] .closing-section { border-color: #35533e; background: #1a3527; }
+html[data-theme="dark"] .tone-mint, html[data-theme="dark"] .tone-violet, html[data-theme="dark"] .tone-amber { background: #1a3527; }
+html[data-theme="dark"] .plan-card.featured { border-color: #4f9d6c; background: #203e2d; }
+html[data-theme="dark"] .landing-footer { border-color: #2d4b38; color: #91a99a; }
+html[data-theme="dark"] .billing-shell, html[data-theme="dark"] .admin-shell, html[data-theme="dark"] .remover-shell { color: #eaf3eb; background: #12271d; }
+html[data-theme="dark"] .billing-header, html[data-theme="dark"] .admin-header, html[data-theme="dark"] .remover-header { border-color: #2c4b38; background: #183126; }
+html[data-theme="dark"] .billing-brand, html[data-theme="dark"] .admin-brand, html[data-theme="dark"] .remover-brand, html[data-theme="dark"] .billing-intro h1, html[data-theme="dark"] .admin-intro h1, html[data-theme="dark"] .remover-intro h1 { color: #edf6ee; }
+html[data-theme="dark"] .plan-selector, html[data-theme="dark"] .payment-form, html[data-theme="dark"] .admin-section, html[data-theme="dark"] .topup-card, html[data-theme="dark"] .removal-card, html[data-theme="dark"] .model-card, html[data-theme="dark"] .remover-dropzone { border-color: #35533f; color: #d9e9dc; background: #193427; }
+html[data-theme="dark"] .billing-plan, html[data-theme="dark"] .payment-form input, html[data-theme="dark"] .topup-card select, html[data-theme="dark"] .topup-card input, html[data-theme="dark"] .receiver-card, html[data-theme="dark"] .remover-controls button { border-color: #3a5b44; color: #d9e9dc; background: #1e3b2c; }
+html[data-theme="dark"] .admin-section-head h2, html[data-theme="dark"] .topup-card h2, html[data-theme="dark"] .remover-dropzone h2, html[data-theme="dark"] .model-row strong { color: #eaf4ec; }
+html[data-theme="dark"] .app-theme-toggle { border-color: #365541; color: #b7d3be; background: #1d392a; }
+html[data-theme="dark"] button:focus-visible, html[data-theme="dark"] a:focus-visible, html[data-theme="dark"] input:focus-visible, html[data-theme="dark"] select:focus-visible, html[data-theme="dark"] textarea:focus-visible { outline-color: #8ee2a9; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(50,155,95,.42); outline-offset: 3px; }

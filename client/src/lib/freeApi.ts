@@ -1,0 +1,82 @@
+export const freeProviders = ["Gemini", "Groq", "Mistral", "OpenAI", "OpenRouter"] as const;
+export type FreeProvider = (typeof freeProviders)[number];
+type ApiKeyStore = Partial<Record<FreeProvider, string[]>>;
+
+let sessionKeyStore: ApiKeyStore = {};
+let rotationIndices: Partial<Record<FreeProvider, number>> = {};
+
+export function loadFreeKeys(): ApiKeyStore {
+  return sessionKeyStore;
+}
+
+export function saveFreeKey(provider: FreeProvider, rawKey: string) {
+  const key = rawKey.trim();
+  if (!key) return false;
+  const store = loadFreeKeys();
+  const values = store[provider] ?? [];
+  if (!values.includes(key)) store[provider] = [...values, key];
+  sessionKeyStore = store;
+  return true;
+}
+
+export function removeFreeKey(provider: FreeProvider, key: string) {
+  const store = loadFreeKeys();
+  store[provider] = (store[provider] ?? []).filter((entry) => entry !== key);
+  sessionKeyStore = store;
+}
+
+function nextKey(provider: FreeProvider) {
+  const store = loadFreeKeys();
+  const keys = store[provider] ?? [];
+  if (!keys.length) throw new Error(`Add a ${provider} API key to use Free API mode.`);
+  const index = (rotationIndices[provider] ?? 0) % keys.length;
+  rotationIndices[provider] = (index + 1) % keys.length;
+  return keys[index];
+}
+
+export async function generateWithFreeApi(provider: FreeProvider, prompt: string, image: string | null) {
+  const key = nextKey(provider);
+  const content = image ? [{ type: "image_url", image_url: { url: image } }, { type: "text", text: prompt }] : prompt;
+
+  if (provider === "Gemini") {
+    const parts = image ? [{ inline_data: { mime_type: "image/jpeg", data: image.split(",")[1] } }, { text: prompt }] : [{ text: prompt }];
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts }] }) });
+    if (!response.ok) throw new Error(`Gemini request failed (${response.status}).`);
+    const data = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  }
+
+  const config = provider === "Groq"
+    ? { url: "https://api.groq.com/openai/v1/chat/completions", model: "meta-llama/llama-4-scout-17b-16e-instruct" }
+    : provider === "Mistral"
+      ? { url: "https://api.mistral.ai/v1/chat/completions", model: "mistral-small-latest" }
+      : provider === "OpenAI"
+        ? { url: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" }
+        : { url: "https://openrouter.ai/api/v1/chat/completions", model: "meta-llama/llama-4-scout" };
+  const response = await fetch(config.url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, ...(provider === "OpenRouter" ? { "HTTP-Referer": window.location.origin, "X-Title": "Sweet AI Lab by SONET" } : {}) }, body: JSON.stringify({ model: config.model, messages: [{ role: "user", content }], max_tokens: 1200 }) });
+  if (!response.ok) throw new Error(`${provider} request failed (${response.status}).`);
+  const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content ?? "";
+}
+
+export function createFreePrompt(mode: "metadata" | "prompt", platform: string, style: string, settings: { titleRange: number[]; keywordRange: number[]; descriptionRange: number[]; singleWords: boolean; silhouette: boolean; customPrompt: string; prohibitedWords: string; prefix: string; suffix: string }) {
+  if (mode === "prompt") return `Analyze this image and return one detailed AI image-generation prompt in the ${style} style. Mention subject, composition, lighting, material, color, mood, and important visual details. Return plain text only.`;
+  return [
+    `You are a ${platform} stock metadata specialist. Analyze this image and return valid JSON only.`,
+    "Schema: {\"title\":string,\"keywords\":string[],\"description\":string,\"category\":string}.",
+    `Title: ${settings.titleRange[0]}–${settings.titleRange[1]} words. Keywords: ${settings.keywordRange[0]}–${settings.keywordRange[1]}. Description: ${settings.descriptionRange[0]}–${settings.descriptionRange[1]} words.`,
+    settings.singleWords ? "Prefer single-word keywords." : "Use the most precise search terms.",
+    settings.silhouette ? "Treat the subject as a silhouette; do not invent unobservable details." : "",
+    settings.customPrompt ? `Creator instruction: ${settings.customPrompt}` : "",
+    settings.prohibitedWords ? `Avoid: ${settings.prohibitedWords}` : "",
+    settings.prefix ? `Start the title with: ${settings.prefix}` : "",
+    settings.suffix ? `End the title with: ${settings.suffix}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+export function normalizeMetadata(output: string) {
+  const cleaned = output.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+  const parsed = JSON.parse(cleaned) as { title?: string; keywords?: string[]; description?: string; category?: string };
+  if (!parsed.title || !parsed.description || !Array.isArray(parsed.keywords)) throw new Error("The AI response was not complete metadata. Try another provider or image.");
+  return { title: parsed.title, keywords: parsed.keywords.filter(Boolean), description: parsed.description, category: parsed.category ?? "" };
+}

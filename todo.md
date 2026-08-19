@@ -1,0 +1,34 @@
+# Project TODO
+
+- [x] Replace template app shell with the RA Graphic Studio product architecture and route map.
+- [x] Complete an app-wide light/dark theme treatment and accessibility focus-state review across landing, billing, admin, and background-remover routes.
+- [x] Build public landing page with product narrative, Google OAuth call to action, core-tool highlights, and supported-platform badges.
+- [x] Configure and validate Supabase connection and secure environment variables; document the user-owned Google OAuth redirect URLs required after the final Vercel domain is known.
+- [x] Design and apply Supabase schema for profiles, credit balances, credit ledger entries, payment requests, and administrator actions.
+- [x] Implement exact Supabase RPC contracts: get_my_credits, deduct_credit, and submit_payment_request.
+- [x] Implement role-based admin authorization and an administrator bootstrap procedure.
+- [x] Build protected studio shell with Mode, Customize, and Settings sidebar tabs.
+- [x] Implement platform selector in required order: General, Adobe Stock, Freepik, Shutterstock, Vecteezy, Depositphotos, 123RF, Dreamstime.
+- [x] Implement accessible drag-and-drop upload, pending queue, per-file result cards, retry handling, and clear-all controls.
+- [x] Implement Metadata Generator controls: title, keyword, and description count sliders; single-word, silhouette, custom prompt, prohibited words, title prefix, and title suffix controls.
+- [x] Implement Image-to-Prompt mode with exact styles: Original, Kawaii Sticker, Flat Vector, Pixar 3D, Cinematic, Coloring Book, B&W Vector, Line Art.
+- [x] Implement CSV and text export for successfully generated results.
+- [x] Implement Free API mode with memory-only in-tab key guidance and exact provider list: Gemini, Groq, Mistral, OpenAI, OpenRouter.
+- [x] Implement Free API key rotation and non-persistent safety messaging.
+- [x] Implement secure paid AI endpoint with server-only provider credentials, authenticated request validation, usage metering, and post-success credit deduction; document the external-provider transaction boundary.
+- [x] Implement exact plans: Free with 10 credits; Pro with 6000 credits at ৳400; Max with 8000 credits at ৳500.
+- [x] Build bKash payment request form with validation, request persistence, and prefilled WhatsApp handoff.
+- [x] Build administrator pages to view, approve, reject, activate plans, top up credits, and inspect user credit status.
+- [x] Implement browser-local background removal in a Web Worker using Transformers.js v3, ONNX/WASM, and briaai/RMBG-1.4.
+- [x] Implement canvas alpha compositing, one-credit post-success deduction, individual downloads, and batch PNG download for background removal.
+- [x] Add unit and configuration-contract tests for plan activation, provider catalog, prompt/output transformations, authentication, payment contacts, and Supabase setup.
+- [x] Verify responsive public behavior, empty states, type safety, production build output, and documented authenticated-flow acceptance checks.
+- [x] Prepare Vercel deployment configuration, environment-variable checklist, Supabase OAuth redirect checklist, and custom-domain connection guidance.
+- [x] Document the final Vercel and custom-domain URLs that must be entered in Supabase Google OAuth redirect settings after the user owns the production domain.
+- [x] Provide an end-to-end signed-in acceptance procedure covering payment approval, paid and Free generation, and browser-local model download.
+- [x] Replace every visible RA Graphic Studio brand reference with Sweet AI Lab by SONET across the public site, protected tools, billing, administration, browser title, and deployment-facing copy.
+- [x] Add AI-Powered Tools for Creators as the consistent user-facing Sweet AI Lab tagline where branding context permits.
+- [x] Verify that the rebrand preserves the existing public layout, workflow routes, authentication path, database contract, API path, and feature interactions through source audit, type checks, tests, production build, and desktop/mobile review.
+- [ ] Verify ownership and default branch of the existing sweet-ai-lab-website GitHub repository.
+- [ ] Transfer the complete Sweet AI Lab by SONET source, Supabase schema, Vercel configuration, and deployment documentation without committing secrets.
+- [ ] Verify the GitHub commit and report the Vercel import steps.
