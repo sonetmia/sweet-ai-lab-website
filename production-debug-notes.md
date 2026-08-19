@@ -26,3 +26,7 @@ The later production deployment successfully rendered the non-white default them
 ## Dedicated bulk Image Upscaler deployment
 
 GitHub commit `621dfdb` was pushed to the `main` branch and the production landing page subsequently loaded without a blank-screen or asset-loading regression. The deployed page loaded the Vercel JavaScript bundle `index-bECNpGwQ.js`. The protected `/image-upscaler` route is intentionally unavailable without a Supabase session, so authenticated bulk upload, real credit charging, and ZIP download remain an account-holder acceptance check.
+
+## Local AI processing deployment
+
+GitHub commit `4b0eb7d` deployed without a public rendering regression. The public hero now displays the concise `Create. Prepare. Submit.` message, and the production document loaded the newer Vercel JavaScript bundle `index-BMnRk1O0.js`. Logged-in validation remains required for the newly downloaded AI model workers, live Groq-key behavior, and credit-backed image processing.

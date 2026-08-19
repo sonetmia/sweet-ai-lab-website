@@ -61,4 +61,4 @@
 - [x] Add 200 credits to the account associated with md.sonet.mia01@gmail.com and document the adjustment in the credit ledger.
 - [x] Simplify and shorten the public pre-login hero copy without changing the authentication entry point or core product positioning.
 - [ ] Complete a logged-in production acceptance test of AI 2×/4× upscaling, refined background removal, and Groq image metadata generation.
-- [ ] Test and publish the processing, Groq, credit, and hero improvements through GitHub and Vercel.
+- [x] Test and publish the processing, Groq, credit, and hero improvements through GitHub and Vercel.
