@@ -49,8 +49,16 @@
 - [x] Add a browser-based Image Upscaler above Background Remover with 2x/4x processing, downloadable output, and a two-credit post-success deduction.
 - [x] Set a non-white default theme while preserving the existing dark theme option.
 - [x] Remove AI/star/glowing decorative icons from user-facing screens and replace the brand icon with a calligraphic S mark.
-- [ ] Test, push, and deploy the complete credit, upscaler, theme, and branding update through GitHub and Vercel.
+- [x] Test, push, and deploy the complete credit, upscaler, theme, and branding update through GitHub and Vercel.
 - [x] Move Image Upscaler from the Background Remover page into its own dedicated protected route and Studio navigation entry.
 - [x] Support bulk image selection, sequential 2×/4× browser-local processing, per-file results, and individual downloads in the dedicated Image Upscaler.
 - [x] Add ZIP download for completed bulk upscaler output and retain exactly two-credit post-success deductions per processed image.
-- [ ] Test and publish the dedicated bulk Image Upscaler update through GitHub and Vercel.
+- [x] Test and publish the dedicated bulk Image Upscaler update through GitHub and Vercel.
+- [ ] Complete a logged-in production acceptance check for multi-image upload, per-image two-credit deduction, individual PNG download, and ZIP download.
+- [x] Upgrade the dedicated Image Upscaler from canvas resampling to a higher-quality AI-based processing workflow with safe bulk queue behavior.
+- [x] Improve background-removal mask quality and edge refinement while retaining browser-local file processing and one-credit post-success charging.
+- [x] Repair the Groq Free API configuration by using a supported model, a model-catalog vision preflight, and robust model-not-found handling for metadata and prompt generation.
+- [x] Add 200 credits to the account associated with md.sonet.mia01@gmail.com and document the adjustment in the credit ledger.
+- [x] Simplify and shorten the public pre-login hero copy without changing the authentication entry point or core product positioning.
+- [ ] Complete a logged-in production acceptance test of AI 2×/4× upscaling, refined background removal, and Groq image metadata generation.
+- [ ] Test and publish the processing, Groq, credit, and hero improvements through GitHub and Vercel.

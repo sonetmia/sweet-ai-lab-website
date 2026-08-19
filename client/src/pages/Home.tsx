@@ -46,11 +46,11 @@ export default function Home() {
       <main>
         <section className="hero container">
           <div className="hero-copy">
-            <div className="eyebrow">Built for meticulous stock creators</div>
-            <h1>From visual <span>intuition</span> to submission-ready metadata.</h1>
-            <p className="hero-lead">Sweet AI Lab by SONET brings high-quality AI tools into one deliberate workspace—so your creative work moves with clarity, accuracy and pace.</p>
+            <div className="eyebrow">AI tools for stock creators</div>
+            <h1>Create. Prepare.<br /><span>Submit.</span></h1>
+            <p className="hero-lead">Metadata, visual prompts, and private browser-local image tools—one focused workspace.</p>
             <div className="hero-actions"><button className="primary-button" onClick={continueWithGoogle} disabled={loading}>{loading ? <Loader2 size={18} className="spin" /> : <span className="google-mark">G</span>}{loading ? "Opening Google…" : "Continue with Google"}{!loading && <ArrowRight size={17} />}</button><a className="quiet-link" href="#tools">Explore the tools <ArrowRight size={15} /></a></div>
-            <div className="trust-line"><ShieldCheck size={16} /> AI-Powered Tools for Creators. Your paid AI credentials stay server-side and your free keys stay under your control.</div>
+            <div className="trust-line"><ShieldCheck size={16} /> Your free keys stay in this tab. Paid credentials stay server-side.</div>
           </div>
           <div className="hero-art" aria-label="Product workflow preview">
             <div className="art-topline">Studio workspace <span>Live system</span></div>

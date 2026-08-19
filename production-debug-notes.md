@@ -22,3 +22,7 @@ After the Vercel Production environment received the Supabase browser variables 
 ## Feature update verification
 
 The later production deployment successfully rendered the non-white default theme, calligraphic S brand mark, Free plan balance of 500 credits, and Pro price of ৳200. The production landing page no longer showed the previous decorative star/orbit treatment. Authenticated Image Upscaler validation remains a user-account test because the tool is protected by Supabase login and performs a real credit deduction.
+
+## Dedicated bulk Image Upscaler deployment
+
+GitHub commit `621dfdb` was pushed to the `main` branch and the production landing page subsequently loaded without a blank-screen or asset-loading regression. The deployed page loaded the Vercel JavaScript bundle `index-bECNpGwQ.js`. The protected `/image-upscaler` route is intentionally unavailable without a Supabase session, so authenticated bulk upload, real credit charging, and ZIP download remain an account-holder acceptance check.

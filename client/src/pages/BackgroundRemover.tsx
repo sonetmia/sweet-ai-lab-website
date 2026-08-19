@@ -130,9 +130,9 @@ export default function BackgroundRemover() {
   return <div className="remover-shell">
     <header className="remover-header"><button onClick={() => navigate("/studio")}><ArrowLeft size={16} /> Studio</button><a href="/" className="remover-brand"><span className="brand-s">S</span> Sweet AI Lab by SONET</a><div><span>{creditCount === null ? "Checking credits" : `${creditCount} credits`}</span><button onClick={() => navigate("/image-upscaler")}>Image upscaler</button><AppThemeToggle /></div></header>
     <main className="remover-main">
-      <section className="remover-intro"><div className="remover-kicker">Browser-local workflow</div><h1>Background removal,<br /><em>kept local.</em></h1><p>Remove image backgrounds directly in your browser. Your image stays on this device while it is processed.</p></section>
-      <section className="remover-section"><div className="remover-section-heading"><span>BACKGROUND REMOVER</span><p>One credit per successful image.</p></div>
-      {!ready ? <section className="model-card"><div className="model-row"><span className="model-loader"><Loader2 className="spin" size={22} /></span><div><strong>Preparing your background remover</strong><p>{message}</p></div><b>{Math.round(progress)}%</b></div><div className="progress-track"><i style={{ width: `${progress}%` }} /></div><small>First load downloads the model assets to your browser cache.</small></section> : <>
+      <section className="remover-intro"><div className="remover-kicker">Browser-local AI workflow</div><h1>Cleaner cutouts,<br /><em>kept local.</em></h1><p>Use high-definition AI matting for smoother object boundaries while your image remains on this device.</p></section>
+      <section className="remover-section"><div className="remover-section-heading"><span>AI BACKGROUND REMOVER</span><p>One credit per successful image.</p></div>
+      {!ready ? <section className="model-card"><div className="model-row"><span className="model-loader"><Loader2 className="spin" size={22} /></span><div><strong>Preparing high-definition AI matting</strong><p>{message}</p></div><b>{Math.round(progress)}%</b></div><div className="progress-track"><i style={{ width: `${progress}%` }} /></div><small>First load downloads the model assets to your browser cache.</small></section> : <>
         <section className={dragging ? "remover-dropzone dragging" : "remover-dropzone"} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop} onClick={() => pickerRef.current?.click()}><input ref={pickerRef} type="file" multiple accept="image/*" onChange={onFileChange} /><span><UploadCloud size={30} /></span><h2>Drop images to begin</h2><p>PNG, JPG, WEBP and GIF are supported. You can add several files to the same local queue.</p><button><ImagePlus size={15} /> Browse images</button><small>No image upload to the app server</small></section>
         {items.length > 0 && <section className="remover-controls"><span><b>{items.length}</b> {items.length === 1 ? "image" : "images"} in queue · <em>{completed} complete</em></span><div><button onClick={clear}><Trash2 size={14} /> Clear</button><button onClick={processNext} disabled={working || !items.some((item) => item.state === "queued")}><Play size={14} /> {working ? "Processing" : "Process queue"}</button><button className="download-all" onClick={downloadAll} disabled={!completed}><Download size={14} /> Download all PNGs</button></div></section>}
         {items.length > 0 && <section className="remover-grid">{items.map((item, index) => <article className="removal-card" key={item.id}><div className="removal-head"><span>IMAGE {String(index + 1).padStart(2, "0")}</span><button onClick={() => remove(item.id)} aria-label="Remove image"><X size={14} /></button></div><div className="before-after"><div><img src={item.inputUrl} alt="Original upload" /><small>Original</small></div><div className="result-checker">{item.state === "done" && item.resultUrl ? <img src={item.resultUrl} alt="Background removed" /> : item.state === "processing" ? <Loader2 className="spin" size={25} /> : item.state === "error" ? <span className="card-error">{item.error}</span> : <Square size={24} />}<small>{item.state === "done" ? "Transparent PNG" : item.state === "processing" ? "Removing…" : item.state === "error" ? "Could not process" : "Queued"}</small></div></div><footer><strong>{item.file.name}</strong>{item.resultUrl ? <a href={item.resultUrl} download={`${item.file.name.replace(/\.[^.]+$/, "")}-background-removed.png`}><Download size={13} /> PNG</a> : <span>{item.state === "processing" ? "One credit on success" : "Ready"}</span>}</footer></article>)}</section>}
@@ -154,7 +154,8 @@ async function compositeMask(sourceUrl: string, maskWidth: number, maskHeight: n
   const maskContext = maskCanvas.getContext("2d")!;
   const imageData = maskContext.createImageData(maskWidth, maskHeight);
   for (let pixel = 0; pixel < maskWidth * maskHeight; pixel++) {
-    const value = maskPixels[pixel * channels];
+    const normalized = (maskPixels[pixel * channels] ?? 0) / 255;
+    const value = Math.round(Math.max(0, Math.min(1, normalized * normalized * (3 - 2 * normalized))) * 255);
     const offset = pixel * 4;
     imageData.data[offset] = 255;
     imageData.data[offset + 1] = 255;
@@ -162,8 +163,16 @@ async function compositeMask(sourceUrl: string, maskWidth: number, maskHeight: n
     imageData.data[offset + 3] = value;
   }
   maskContext.putImageData(imageData, 0, 0);
+  const featherCanvas = document.createElement("canvas");
+  featherCanvas.width = sourceCanvas.width;
+  featherCanvas.height = sourceCanvas.height;
+  const featherContext = featherCanvas.getContext("2d")!;
+  featherContext.imageSmoothingEnabled = true;
+  featherContext.imageSmoothingQuality = "high";
+  featherContext.filter = "blur(0.45px)";
+  featherContext.drawImage(maskCanvas, 0, 0, featherCanvas.width, featherCanvas.height);
   sourceContext.globalCompositeOperation = "destination-in";
-  sourceContext.drawImage(maskCanvas, 0, 0, sourceCanvas.width, sourceCanvas.height);
+  sourceContext.drawImage(featherCanvas, 0, 0);
   return await new Promise<string>((resolve) => sourceCanvas.toBlob((blob) => resolve(URL.createObjectURL(blob!)), "image/png"));
 }
 
