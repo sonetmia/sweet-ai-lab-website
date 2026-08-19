@@ -4,6 +4,7 @@ import "./app-theme.css";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import BackgroundRemover from "@/pages/BackgroundRemover";
+import ImageUpscaler from "@/pages/ImageUpscaler";
 import Billing from "@/pages/Billing";
 import Admin from "@/pages/Admin";
 import Studio from "@/pages/Studio";
@@ -19,6 +20,7 @@ function App() {
           <Route path="/" component={Home} />
           <Route path="/studio" component={Studio} />
           <Route path="/background-remover" component={BackgroundRemover} />
+          <Route path="/image-upscaler" component={ImageUpscaler} />
           <Route path="/billing" component={Billing} />
           <Route path="/admin" component={Admin} />
           <Route path="/404" component={NotFound} />

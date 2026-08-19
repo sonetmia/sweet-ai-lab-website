@@ -50,3 +50,7 @@
 - [x] Set a non-white default theme while preserving the existing dark theme option.
 - [x] Remove AI/star/glowing decorative icons from user-facing screens and replace the brand icon with a calligraphic S mark.
 - [ ] Test, push, and deploy the complete credit, upscaler, theme, and branding update through GitHub and Vercel.
+- [x] Move Image Upscaler from the Background Remover page into its own dedicated protected route and Studio navigation entry.
+- [x] Support bulk image selection, sequential 2×/4× browser-local processing, per-file results, and individual downloads in the dedicated Image Upscaler.
+- [x] Add ZIP download for completed bulk upscaler output and retain exactly two-credit post-success deductions per processed image.
+- [ ] Test and publish the dedicated bulk Image Upscaler update through GitHub and Vercel.

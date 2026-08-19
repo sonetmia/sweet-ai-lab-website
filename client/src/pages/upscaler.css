@@ -1,20 +1,35 @@
-.brand-s { font-family: "Newsreader", serif; font-size: 25px; font-style: italic; font-weight: 600; line-height: 1; }
-.upscaler-section { display: grid; grid-template-columns: .78fr 1.22fr; gap: 22px; margin: 0 0 52px; padding: 23px; border: 1px solid #c9dfcf; border-radius: 18px; background: #edf7ef; }
-.upscaler-copy > div { display: inline-flex; align-items: center; gap: 7px; color: #287b4e; font-family: "DM Mono"; font-size: 9px; letter-spacing: .09em; }
-.upscaler-copy h2 { margin: 16px 0 9px; color: #1c402d; font-family: "Newsreader"; font-size: 36px; font-weight: 500; letter-spacing: -.05em; }
-.upscaler-copy p { max-width: 330px; color: #668075; font-size: 12px; line-height: 1.65; }
-.upscaler-workspace { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
-.upscaler-workspace input { display: none; }
-.upscale-picker { display: grid; place-items: center; min-height: 150px; overflow: hidden; border: 1px dashed #9bc4a6; border-radius: 12px; color: #4d7961; background: rgba(255,255,255,.56); }
-.upscale-picker > span { margin-top: 7px; font-size: 10px; font-weight: 700; }
-.upscale-picker img { width: 100%; height: 150px; object-fit: contain; }
-.upscale-controls { display: grid; gap: 10px; min-width: 134px; }
-.upscale-controls label { display: grid; gap: 5px; color: #597466; font-size: 9px; font-weight: 700; }
-.upscale-controls select, .upscale-controls button { min-height: 34px; border: 1px solid #b7d4bd; border-radius: 7px; color: #254f38; background: #fff; font-size: 10px; font-weight: 700; }
-.upscale-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: #fff; border-color: #287b4e; background: #287b4e; }
-.upscale-controls button:disabled { opacity: .55; cursor: not-allowed; }
-.upscale-download { grid-column: 1 / -1; display: inline-flex; justify-content: center; align-items: center; gap: 6px; min-height: 34px; border-radius: 7px; color: #276d47; background: #dff2e4; font-size: 10px; font-weight: 700; }
-.upscale-error { grid-column: 1 / -1; margin: 0; color: #a84e52; font-size: 10px; line-height: 1.45; }
-.remover-section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; color: #3c6f51; font-family: "DM Mono"; font-size: 9px; letter-spacing: .09em; }
-.remover-section-heading p { margin: 0; color: #789082; font-family: "DM Sans"; font-size: 10px; letter-spacing: 0; }
-@media (max-width: 720px) { .upscaler-section { grid-template-columns: 1fr; }.upscaler-workspace { grid-template-columns: 1fr; }.upscale-controls { grid-template-columns: 1fr 1fr; }.upscale-controls label { grid-column: 1 / -1; }.remover-section-heading { align-items: flex-start; flex-direction: column; gap: 5px; } }
+.upscaler-main { max-width: 1110px; }
+.upscaler-intro { max-width: 710px; }
+.bulk-upscaler-section { display: grid; grid-template-columns: .75fr 1.25fr; gap: 18px; margin-top: 32px; padding: 22px; border: 1px solid #c9dfcf; border-radius: 18px; background: #edf7ef; }
+.bulk-upscaler-heading > div { display: inline-flex; align-items: center; gap: 7px; color: #287b4e; font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .09em; }
+.bulk-upscaler-heading h2 { margin: 16px 0 9px; color: #1c402d; font-family: "Newsreader", serif; font-size: clamp(30px, 3vw, 38px); font-weight: 500; letter-spacing: -.05em; line-height: .97; }
+.bulk-upscaler-heading h2 em { color: #2c9358; }
+.bulk-upscaler-heading p { max-width: 300px; color: #668075; font-size: 12px; line-height: 1.65; }
+.bulk-upscale-dropzone { min-height: 210px; margin: 0; background: rgba(255,255,255,.55); }
+.bulk-upscaler-section .remover-dropzone button { pointer-events: none; }
+.bulk-upscale-controls { grid-column: 1 / -1; display: flex; align-items: end; gap: 12px; padding-top: 5px; }
+.bulk-upscale-controls label { display: grid; gap: 6px; min-width: 172px; color: #597466; font-size: 9px; font-weight: 700; }
+.bulk-upscale-controls select { min-height: 36px; border: 1px solid #b7d4bd; border-radius: 7px; padding: 0 9px; color: #254f38; background: #fff; font-size: 10px; font-weight: 700; }
+.bulk-upscale-controls p { flex: 1; margin: 0 0 10px; color: #6c8274; font-size: 10px; }
+.bulk-upscale-controls p b { color: #25794b; }
+.bulk-upscale-run, .bulk-zip-button, .card-run, .card-download { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #287b4e; border-radius: 7px; color: #fff; background: #287b4e; font-size: 10px; font-weight: 750; }
+.bulk-upscale-run { min-height: 36px; padding: 0 13px; }
+.bulk-upscale-run:disabled, .bulk-upscale-status button:disabled, .bulk-upscale-card button:disabled { opacity: .54; cursor: not-allowed; }
+.bulk-upscale-status { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 17px 0; padding: 11px 0; border-bottom: 1px solid #d9e7dc; color: #698071; font-size: 10px; line-height: 1.5; }
+.bulk-upscale-status > div { display: flex; flex: 0 0 auto; gap: 8px; }
+.bulk-upscale-status button { display: inline-flex; align-items: center; gap: 5px; min-height: 31px; border: 1px solid #c7dbcc; border-radius: 7px; padding: 0 9px; color: #507261; background: #fff; font-size: 9px; font-weight: 700; }
+.bulk-upscale-status .bulk-zip-button { border-color: #287b4e; color: #fff; background: #287b4e; }
+.bulk-upscale-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); gap: 13px; padding-bottom: 55px; }
+.bulk-upscale-card { overflow: hidden; border: 1px solid #cfe1d3; border-radius: 12px; background: #fff; }
+.bulk-upscale-card-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; color: #638070; font-family: "DM Mono", monospace; font-size: 8px; letter-spacing: .08em; }
+.bulk-upscale-card-head button { display: grid; place-items: center; width: 25px; height: 25px; border: 0; border-radius: 6px; color: #6c8878; background: #edf5ee; }
+.bulk-upscale-preview { display: grid; grid-template-columns: 1fr 1fr; height: 150px; border-top: 1px solid #dbe9de; border-bottom: 1px solid #dbe9de; }
+.bulk-upscale-preview > div { position: relative; display: grid; place-items: center; min-width: 0; color: #71907d; background: #eef6ef; }
+.bulk-upscale-preview > div + div { border-left: 1px solid #dbe9de; background: #f8fbf8; }
+.bulk-upscale-preview img { width: 100%; height: 100%; object-fit: contain; }
+.bulk-upscale-preview small { position: absolute; right: 6px; bottom: 5px; max-width: calc(100% - 12px); overflow: hidden; color: #527160; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.bulk-card-error { padding: 11px; color: #af5254; font-size: 9px; line-height: 1.45; text-align: center; }
+.bulk-upscale-card footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px; }
+.bulk-upscale-card footer > div { min-width: 0; }.bulk-upscale-card footer strong, .bulk-upscale-card footer span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.bulk-upscale-card footer strong { color: #284838; font-size: 10px; }.bulk-upscale-card footer span { margin-top: 4px; color: #728879; font-size: 8px; }.card-run, .card-download { flex: 0 0 auto; min-height: 28px; padding: 0 8px; }.card-download { border-color: #bcdac5; color: #28754a; background: #e7f5ea; }
+html[data-theme="dark"] .bulk-upscaler-section { border-color: #35533f; background: #193427; }.bulk-upscaler-section .remover-dropzone { border-color: #9bc4a6; }html[data-theme="dark"] .bulk-upscaler-heading h2, html[data-theme="dark"] .bulk-upscale-card footer strong { color: #eaf4ec; }html[data-theme="dark"] .bulk-upscaler-heading p, html[data-theme="dark"] .bulk-upscale-controls p, html[data-theme="dark"] .bulk-upscale-status { color: #a9c0af; }html[data-theme="dark"] .bulk-upscale-controls select, html[data-theme="dark"] .bulk-upscale-status button, html[data-theme="dark"] .bulk-upscale-card { border-color: #3a5b44; color: #d9e9dc; background: #1e3b2c; }html[data-theme="dark"] .bulk-upscale-preview, html[data-theme="dark"] .bulk-upscale-preview > div, html[data-theme="dark"] .bulk-upscale-preview > div + div { border-color: #35533f; background: #173126; }html[data-theme="dark"] .bulk-upscale-card-head button { color: #bed4c5; background: #254535; }
+@media (max-width: 720px) { .bulk-upscaler-section { grid-template-columns: 1fr; padding: 15px; }.bulk-upscale-controls { align-items: stretch; flex-direction: column; }.bulk-upscale-controls label { min-width: 0; }.bulk-upscale-controls p { margin: 0; }.bulk-upscale-run { width: 100%; }.bulk-upscale-status { align-items: stretch; flex-direction: column; }.bulk-upscale-status > div { flex-wrap: wrap; }.bulk-upscale-status button { flex: 1; justify-content: center; }.bulk-upscale-grid { grid-template-columns: 1fr; } }

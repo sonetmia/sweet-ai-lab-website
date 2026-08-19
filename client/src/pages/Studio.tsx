@@ -12,6 +12,7 @@ import {
   FileText,
   FolderUp,
   ImageIcon,
+  ImageUp,
   KeyRound,
   LayoutPanelTop,
   Loader2,
@@ -228,6 +229,7 @@ export default function Studio() {
             </>}
           </div>
           <a className="background-link" href="/background-remover"><ImageIcon size={16} /><span>Background remover</span><ChevronDown size={14} /></a>
+          <a className="upscaler-link" href="/image-upscaler"><ImageUp size={16} /><span>Image upscaler</span><ChevronDown size={14} /></a>
         </aside>
         <main className="studio-main">
           <section className="studio-main-top"><div><p className="studio-kicker">{mode === "metadata" ? "Metadata workspace" : "Image-to-prompt workspace"}</p><h1>{mode === "metadata" ? "Build a cleaner submission set." : "Capture an image’s visual language."}</h1></div><div className="platform-control"><span>Target platform</span><select value={platform} onChange={(event) => setPlatform(event.target.value as (typeof platforms)[number])}>{platforms.map((item) => <option key={item}>{item}</option>)}</select></div></section>
