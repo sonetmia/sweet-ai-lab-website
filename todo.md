@@ -29,6 +29,7 @@
 - [x] Replace every visible RA Graphic Studio brand reference with Sweet AI Lab by SONET across the public site, protected tools, billing, administration, browser title, and deployment-facing copy.
 - [x] Add AI-Powered Tools for Creators as the consistent user-facing Sweet AI Lab tagline where branding context permits.
 - [x] Verify that the rebrand preserves the existing public layout, workflow routes, authentication path, database contract, API path, and feature interactions through source audit, type checks, tests, production build, and desktop/mobile review.
-- [ ] Verify ownership and default branch of the existing sweet-ai-lab-website GitHub repository.
-- [ ] Transfer the complete Sweet AI Lab by SONET source, Supabase schema, Vercel configuration, and deployment documentation without committing secrets.
-- [ ] Verify the GitHub commit and report the Vercel import steps.
+- [x] Verify ownership and default branch of the existing sweet-ai-lab-website GitHub repository.
+- [x] Transfer the complete Sweet AI Lab by SONET source, Supabase schema, Vercel configuration, and deployment documentation without committing secrets.
+- [x] Verify the GitHub commit and report the Vercel import steps.
+- [x] Send the user the exact Vercel import, environment-variable, Supabase, and Google OAuth production configuration sequence.
