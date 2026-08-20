@@ -42,7 +42,7 @@ const initialCredits: Credits = { credits: 200, plan: "Free", expired: false, ex
 const providerKeyUrls: Partial<Record<FreeProvider, string>> = {
   Gemini: "https://aistudio.google.com/app/apikey",
   Groq: "https://console.groq.com/keys",
-  OpenRouter: "https://openrouter.ai/keys",
+  OpenRouter: "https://openrouter.ai/settings/keys",
   Mistral: "https://console.mistral.ai/api-keys/",
   OpenAI: "https://platform.openai.com/api-keys",
   "Together AI": "https://api.together.ai/settings/api-keys",
