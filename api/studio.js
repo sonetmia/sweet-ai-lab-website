@@ -39,6 +39,12 @@ export default async function handler(request, response) {
   if (request.method !== "POST") return json(response, 405, { error: "method_not_allowed" });
   const token = accessToken(request.headers);
   if (!token) return json(response, 401, { error: "not_authenticated" });
+  if (process.env.HOSTED_PAID_API_ENABLED !== "true") {
+    return json(response, 503, {
+      error: "hosted_provider_unavailable",
+      detail: "The hosted Paid API is disabled because its provider account has no credits. Use Own-key API with your own provider key instead.",
+    });
+  }
   try {
     const supabaseUrl = env("VITE_SUPABASE_URL");
     const anonKey = env("VITE_SUPABASE_ANON_KEY");

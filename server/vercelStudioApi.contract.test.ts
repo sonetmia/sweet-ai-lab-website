@@ -8,6 +8,8 @@ describe("Vercel Studio API entrypoint", () => {
     expect(source).toContain("/auth/v1/user");
     expect(source).toContain("/rest/v1/rpc/get_my_credits");
     expect(source).toContain('error: "studio_request_failed"');
+    expect(source).toContain('process.env.HOSTED_PAID_API_ENABLED !== "true"');
+    expect(source).toContain('error: "hosted_provider_unavailable"');
   });
 
   it("keeps simple direct API routes for health and admin bootstrap", () => {
