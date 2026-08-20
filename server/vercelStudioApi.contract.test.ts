@@ -8,4 +8,11 @@ describe("Vercel Studio API entrypoint", () => {
     expect(source).toContain('res.setHeader("Content-Type", "application/json; charset=utf-8")');
     expect(source).toContain('error: "studio_request_failed"');
   });
+
+  it("keeps the wildcard Vercel API route on the same JSON-only Studio handler", () => {
+    const source = readFileSync(new URL("../api/[...path].ts", import.meta.url), "utf8");
+    expect(source).toContain('import studioHandler from "./studio"');
+    expect(source).toContain("return studioHandler(req, res)");
+    expect(source).not.toContain('import express');
+  });
 });
