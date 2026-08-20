@@ -39,6 +39,16 @@ type Credits = { credits: number; plan: string; expired: boolean; expiresAt: str
 type ApiMode = "paid" | "free";
 
 const initialCredits: Credits = { credits: 200, plan: "Free", expired: false, expiresAt: null };
+const providerKeyUrls: Partial<Record<FreeProvider, string>> = {
+  Gemini: "https://aistudio.google.com/app/apikey",
+  Groq: "https://console.groq.com/keys",
+  OpenRouter: "https://openrouter.ai/keys",
+  Mistral: "https://console.mistral.ai/api-keys/",
+  OpenAI: "https://platform.openai.com/api-keys",
+  "Together AI": "https://api.together.ai/settings/api-keys",
+  SambaNova: "https://cloud.sambanova.ai/apis",
+  "Hugging Face": "https://huggingface.co/settings/tokens",
+};
 
 function wordLabel(value: number) {
   return `${value} words`;
@@ -165,25 +175,7 @@ export default function Studio() {
         let output: QueueItem["output"];
         let remaining: number | undefined;
         if (apiMode === "paid") {
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (!sessionData.session) throw new Error("Your session has expired. Please sign in again.");
-          const sendPaidRequest = (paidImage: string | null) => fetch("/api/studio", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionData.session.access_token}` }, body: JSON.stringify({ image: paidImage, mode, tier: paidTier, settings: studioSettings() }) });
-          const preparedImage = image ? await preparePaidApiImage(image) : null;
-          let response = await sendPaidRequest(preparedImage);
-          if (response.status === 413 && image) {
-            const retryImage = await preparePaidApiImage(image, true);
-            response = await sendPaidRequest(retryImage);
-          }
-          const responseText = await response.text();
-          let payload: { error?: string; detail?: string; result?: QueueItem["output"]; credits?: number };
-          try {
-            payload = JSON.parse(responseText) as typeof payload;
-          } catch {
-            const summary = responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 140);
-            throw new Error(`Paid API server error (${response.status}). ${summary || "The server did not return a valid response. Please try again later."}`);
-          }
-          if (!response.ok || !payload.result) throw new Error([payload.error?.replaceAll("_", " "), payload.detail].filter(Boolean).join(": ") || "The paid generation request could not be completed.");
-          output = payload.result; remaining = payload.credits;
+          throw new Error("Hosted Paid API is temporarily unavailable because its provider account has no credits. Open API keys and use your own provider key instead.");
         } else {
           const prompt = createFreePrompt(mode, platform, promptStyle, { titleRange, keywordRange, descriptionRange, singleWords: toggles.singleWords, silhouette: toggles.silhouette, customPrompt: textOptions.customPrompt, prohibitedWords: textOptions.prohibitedWords, prefix: textOptions.prefix, suffix: textOptions.suffix });
           const raw = await generateWithFreeApi(freeProvider, prompt, image);
@@ -282,7 +274,7 @@ export default function Studio() {
           </section>
         </main>
       </div>
-      {apiModalOpen && <div className="api-modal-backdrop" onClick={() => setApiModalOpen(false)}><section className="api-modal" onClick={(event) => event.stopPropagation()}><button className="api-modal-close" onClick={() => setApiModalOpen(false)} aria-label="Close API settings"><X size={16} /></button><p className="side-label">AI generation path</p><h2>Choose how to power your work.</h2><div className="api-mode-switch"><button className={apiMode === "paid" ? "active" : ""} onClick={() => setApiMode("paid")}>Paid API</button><button className={apiMode === "free" ? "active" : ""} onClick={() => setApiMode("free")}>Own-key API</button></div>{apiMode === "paid" ? <div className="paid-options"><p>Secure provider credentials stay on the server. Standard costs 2 credits per successful image; Premium costs 3.</p><button className={paidTier === "standard" ? "selected" : ""} onClick={() => setPaidTier("standard")}><span>Standard</span><b>Llama 4 Scout · 2 credits</b></button><button className={paidTier === "premium" ? "selected" : ""} onClick={() => setPaidTier("premium")}><span>Premium</span><b>Llama 4 Maverick · 3 credits</b></button></div> : <div className="free-options"><p>Keys stay only in this tab’s temporary memory, never local storage. Providers with a model catalog are auto-detected when you add a key. A provider without a reachable catalog uses its documented vision default and verifies it on first use. If a configured provider reaches a quota, the next configured provider is tried automatically. Provider quotas and pricing remain controlled by each provider account.</p><label>Provider<select value={freeProvider} onChange={(event) => { setFreeProvider(event.target.value as FreeProvider); setFreeKeyMessage(""); }}>{freeProviders.map((provider) => <option key={provider}>{provider}</option>)}</select></label><div className="key-add"><input type="password" value={newKey} onChange={(event) => setNewKey(event.target.value)} placeholder={`Paste a ${freeProvider} API key`} /><button onClick={() => void addNewFreeKey()} disabled={detectingKey}>{detectingKey ? "Checking…" : "Add key"}</button></div>{freeKeyMessage && <small className="api-key-status">{freeKeyMessage}</small>}<div className="saved-keys" key={freeKeyVersion}>{(loadFreeKeys()[freeProvider] ?? []).length ? (loadFreeKeys()[freeProvider] ?? []).map((key) => <div key={key}><span>{key.slice(0, 5)}••••••••{key.slice(-4)}<small>{getSelectedFreeModelLabel(freeProvider, key)}</small></span><button onClick={() => { removeFreeKey(freeProvider, key); setFreeKeyVersion((version) => version + 1); }}>Remove</button></div>) : <span>No {freeProvider} keys added in this tab.</span>}</div></div>}<button className="api-modal-done" onClick={() => setApiModalOpen(false)}>Use this path <Check size={15} /></button></section></div>}
+      {apiModalOpen && <div className="api-modal-backdrop" onClick={() => setApiModalOpen(false)}><section className="api-modal" onClick={(event) => event.stopPropagation()}><button className="api-modal-close" onClick={() => setApiModalOpen(false)} aria-label="Close API settings"><X size={16} /></button><p className="side-label">AI generation path</p><h2>Use your own API key.</h2><div className="api-mode-switch"><button className="unavailable" type="button" disabled title="The hosted provider has no credits">Hosted Paid API unavailable</button><button className="active" type="button" onClick={() => setApiMode("free")}>Own-key API</button></div><div className="free-options"><p>Your key stays only in this browser tab. It is not sent to GitHub, stored in the app database, or shared with Sweet AI Lab. Add one provider key below; another configured provider is tried if the first provider has a quota limit.</p><label>Provider<select value={freeProvider} onChange={(event) => { setFreeProvider(event.target.value as FreeProvider); setFreeKeyMessage(""); }}>{freeProviders.map((provider) => <option key={provider}>{provider}</option>)}</select></label><a className="provider-key-link" href={providerKeyUrls[freeProvider]} target="_blank" rel="noreferrer">Create a {freeProvider} key on the official website ↗</a><div className="key-add"><input type="password" value={newKey} onChange={(event) => setNewKey(event.target.value)} placeholder={`Paste a ${freeProvider} API key`} /><button onClick={() => void addNewFreeKey()} disabled={detectingKey}>{detectingKey ? "Checking…" : "Add key"}</button></div>{freeKeyMessage && <small className="api-key-status">{freeKeyMessage}</small>}<div className="saved-keys" key={freeKeyVersion}>{(loadFreeKeys()[freeProvider] ?? []).length ? (loadFreeKeys()[freeProvider] ?? []).map((key) => <div key={key}><span>{key.slice(0, 5)}••••••••{key.slice(-4)}<small>{getSelectedFreeModelLabel(freeProvider, key)}</small></span><button onClick={() => { removeFreeKey(freeProvider, key); setFreeKeyVersion((version) => version + 1); }}>Remove</button></div>) : <span>No {freeProvider} keys added in this tab.</span>}</div></div><button className="api-modal-done" onClick={() => setApiModalOpen(false)}>Use this path <Check size={15} /></button></section></div>}
     </div>
   );
 }

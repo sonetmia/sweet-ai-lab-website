@@ -86,4 +86,8 @@
 - [x] Compress and cap Paid API image payloads before the serverless request to prevent Vercel FUNCTION_PAYLOAD_TOO_LARGE errors.
 - [x] Add Paid API 413 recovery with a safe browser-side compact-image retry and no application-credit charge on failure.
 - [x] Diagnose and rebuild the Billing page so authenticated users no longer encounter the unexpected-error state.
-- [ ] Test and publish the Paid API payload and Billing-page reliability fix through GitHub and Vercel.
+- [x] Test and publish the Paid API payload and Billing-page reliability fix through GitHub and Vercel.
+- [ ] Confirm on a logged-in production session that a large-image Paid API request completes without a 413 and the rebuilt Billing page opens normally.
+- [x] Remove the exhausted hosted OpenRouter account as a blocking Paid API dependency and make the unavailable-credit state actionable in the Studio.
+- [x] Add secure in-app key-creation guidance and direct official provider links without exposing or storing user API keys in GitHub or the database.
+- [ ] Test and publish the revised user-owned generation path through GitHub and Vercel.
