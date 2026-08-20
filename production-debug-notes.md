@@ -30,3 +30,7 @@ GitHub commit `621dfdb` was pushed to the `main` branch and the production landi
 ## Local AI processing deployment
 
 GitHub commit `4b0eb7d` deployed without a public rendering regression. The public hero now displays the concise `Create. Prepare. Submit.` message, and the production document loaded the newer Vercel JavaScript bundle `index-BMnRk1O0.js`. Logged-in validation remains required for the newly downloaded AI model workers, live Groq-key behavior, and credit-backed image processing.
+
+## Multi-provider fallback deployment
+
+GitHub commit `e0d1bc0` deployed without a public rendering regression. The production bundle `index-5989a5-e.js` contains the `Together AI`, `SambaNova`, and `Hugging Face` provider labels plus the configured-provider fallback message, confirming that the release source is live. It adds automatic compatible-model selection for own-key providers with a model catalog, clearly labels documented defaults for catalog-less providers, and retries another configured provider when a quota or rate-limit response occurs. Logged-in production validation with the user’s actual keys remains required because provider quotas, account access, and CORS policies are external to the application.

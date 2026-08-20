@@ -63,6 +63,6 @@
 - [ ] Complete a logged-in production acceptance test of AI 2×/4× upscaling, refined background removal, and Groq image metadata generation.
 - [x] Test and publish the processing, Groq, credit, and hero improvements through GitHub and Vercel.
 - [x] Expand Free API support with additional image-capable providers while preserving Gemini, Groq, Mistral, OpenAI, and OpenRouter in their existing order.
-- [x] Detect an API key’s available models automatically when it is added and select the best compatible model for image metadata or prompt generation.
+- [x] Detect available models through provider catalogs when an API key is added, select the best compatible model, and explicitly label a documented default where a catalog is unavailable.
 - [x] Handle provider quota, rate-limit, authentication, and model-unavailable responses with a usable automatic fallback or clear next-provider instruction before retrying work.
-- [ ] Test and publish the multi-provider automatic model-selection and fallback update through GitHub and Vercel.
+- [x] Test and publish the multi-provider automatic model-selection and fallback update through GitHub and Vercel.
