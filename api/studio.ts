@@ -1,5 +1,7 @@
 import { buildStudioPrompt, parseMetadataResult, type StudioMode } from "../server/studioPrompt";
 
+export const config = { runtime: "nodejs" };
+
 type VercelRequestLike = { method?: string; headers: Record<string, string | string[] | undefined>; body?: unknown };
 type VercelResponseLike = { status: (code: number) => VercelResponseLike; json: (payload: unknown) => void; setHeader: (name: string, value: string) => void };
 type StudioRequest = { prompt?: string; image?: string | null; mode?: StudioMode; tier?: "standard" | "premium"; settings?: Record<string, unknown> };
