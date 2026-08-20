@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { addFreeKeyWithAutoModel, COMPACT_VISION_IMAGE_MAX_DATA_URL_CHARS, createFreePrompt, freeProviders, generateWithFreeApi, getSelectedFreeModelLabel, groqTextFallbackModel, groqVisionModel, needsVisionImageNormalization, normalizeMetadata, openRouterFreeVisionModel, removeFreeKey, selectBestProviderModel, selectGroqModel, VISION_IMAGE_MAX_DATA_URL_CHARS } from "../client/src/lib/freeApi";
+import { addFreeKeyWithAutoModel, COMPACT_VISION_IMAGE_MAX_DATA_URL_CHARS, createFreePrompt, freeProviders, generateWithFreeApi, getSelectedFreeModelLabel, groqTextFallbackModel, groqVisionModel, needsVisionImageNormalization, normalizeMetadata, openRouterFreeVisionModel, PAID_API_RETRY_IMAGE_MAX_DATA_URL_CHARS, removeFreeKey, selectBestProviderModel, selectGroqModel, VISION_IMAGE_MAX_DATA_URL_CHARS } from "../client/src/lib/freeApi";
 
 describe("Free API mode contract", () => {
   it("keeps the exact provider catalog in the required order", () => {
@@ -24,6 +24,7 @@ describe("Free API mode contract", () => {
 
   it("identifies oversized inline vision images before a provider request", () => {
     expect(VISION_IMAGE_MAX_DATA_URL_CHARS).toBeGreaterThan(COMPACT_VISION_IMAGE_MAX_DATA_URL_CHARS);
+    expect(PAID_API_RETRY_IMAGE_MAX_DATA_URL_CHARS).toBeLessThan(250_000);
     expect(needsVisionImageNormalization(`data:image/jpeg;base64,${"A".repeat(VISION_IMAGE_MAX_DATA_URL_CHARS)}`)).toBe(true);
     expect(needsVisionImageNormalization("data:image/png;base64,small")).toBe(false);
     expect(needsVisionImageNormalization("https://example.com/image.jpg")).toBe(false);

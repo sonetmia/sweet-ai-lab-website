@@ -18,5 +18,10 @@ describe("requested experience update contract", () => {
     expect(studio).toContain("profileImage");
     expect(studio).toContain("await response.text()");
     expect(studio).toContain("Paid API server error");
+    expect(studio).toContain("preparePaidApiImage(image, true)");
+    expect(studio).toContain("response.status === 413");
+    const billing = readFileSync(new URL("../client/src/pages/Billing.tsx", import.meta.url), "utf8");
+    expect(billing).toContain('|| "01797953059"');
+    expect(billing).toContain("function toWhatsAppId(value?: string)");
   });
 });

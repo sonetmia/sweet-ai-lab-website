@@ -80,5 +80,10 @@
 - [x] Remove the requested AI-Powered Tools for Creators copy and replace the plan-section headline with plain-English wording.
 - [x] Add accessible selection and click feedback animations while preserving reduced-motion preferences and smooth runtime behavior.
 - [x] Show the signed-in Google account avatar and profile details in the protected website profile area.
-- [ ] Fix Paid API generation response parsing so non-JSON server responses are reported clearly instead of causing an Unexpected token error.
-- [ ] Test and publish the payment, contact, copy, profile, animation, and Paid API reliability update through GitHub and Vercel.
+- [x] Fix Paid API generation response parsing so non-JSON server responses are reported clearly instead of causing an Unexpected token error.
+- [x] Test and publish the payment, contact, copy, profile, animation, and Paid API reliability update through GitHub and Vercel.
+- [ ] Complete a logged-in production Paid API metadata and image-to-prompt generation run after the Vercel runtime repair.
+- [x] Compress and cap Paid API image payloads before the serverless request to prevent Vercel FUNCTION_PAYLOAD_TOO_LARGE errors.
+- [x] Add Paid API 413 recovery with a safe browser-side compact-image retry and no application-credit charge on failure.
+- [x] Diagnose and rebuild the Billing page so authenticated users no longer encounter the unexpected-error state.
+- [ ] Test and publish the Paid API payload and Billing-page reliability fix through GitHub and Vercel.

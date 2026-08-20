@@ -1,6 +1,6 @@
 import { bootstrapConfiguredAdmin } from "@/lib/admin";
 import { platforms, promptStyles } from "@/lib/catalog";
-import { addFreeKeyWithAutoModel, createFreePrompt, freeProviders, generateWithFreeApi, getSelectedFreeModelLabel, loadFreeKeys, normalizeMetadata, removeFreeKey, type FreeProvider } from "@/lib/freeApi";
+import { addFreeKeyWithAutoModel, createFreePrompt, freeProviders, generateWithFreeApi, getSelectedFreeModelLabel, loadFreeKeys, normalizeMetadata, preparePaidApiImage, removeFreeKey, type FreeProvider } from "@/lib/freeApi";
 import { supabase } from "@/lib/supabase";
 import "./api-modal.css";
 import "./studio.css";
@@ -167,7 +167,13 @@ export default function Studio() {
         if (apiMode === "paid") {
           const { data: sessionData } = await supabase.auth.getSession();
           if (!sessionData.session) throw new Error("Your session has expired. Please sign in again.");
-          const response = await fetch("/api/studio", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionData.session.access_token}` }, body: JSON.stringify({ image, mode, tier: paidTier, settings: studioSettings() }) });
+          const sendPaidRequest = (paidImage: string | null) => fetch("/api/studio", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionData.session.access_token}` }, body: JSON.stringify({ image: paidImage, mode, tier: paidTier, settings: studioSettings() }) });
+          const preparedImage = image ? await preparePaidApiImage(image) : null;
+          let response = await sendPaidRequest(preparedImage);
+          if (response.status === 413 && image) {
+            const retryImage = await preparePaidApiImage(image, true);
+            response = await sendPaidRequest(retryImage);
+          }
           const responseText = await response.text();
           let payload: { error?: string; detail?: string; result?: QueueItem["output"]; credits?: number };
           try {

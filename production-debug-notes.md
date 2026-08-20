@@ -40,3 +40,17 @@ GitHub commit `e0d1bc0` deployed without a public rendering regression. The prod
 The hosted OpenRouter credential returned `402 Insufficient credits` for a minimal image completion, explaining why the previous default paid path could not generate metadata or prompts. Studio now defaults to the user’s own-key path. In a browser against the local build, both lazy worker modules constructed successfully and the high-quality canvas fallback produced a valid 24 × 16 PNG from a 12 × 8 source. Logged-in production validation remains required for a real image background-removal run and an actual configured own-key generation request.
 
 GitHub commit `9aa434c` deployed without a public rendering regression and is served by production bundle `index-DSovdaBQ.js`. Function names are minified in the deployed JavaScript, but the bundle includes the preserved `AI acceleration is unavailable in this browser`, `simple-background fallback`, and `Own key` recovery/interface text. This confirms the stability release is live; a logged-in production run remains required for real image and own-key behavior.
+
+## Oversized-image Free API recovery
+
+GitHub commit `c1f809d` deployed without a public rendering regression and is served by production bundle `index-DtxEcKAH.js`. The live bundle includes the safe-image-payload and compact-image recovery text, confirming that browser-side vision-payload normalization and the 413 retry route are live. A logged-in request using the user’s actual Groq key and the previously oversized image remains required for final confirmation.
+
+## Experience and Paid API runtime recovery
+
+The public experience release displays the requested simple copy, 200-credit Free plan, contact control, bKash/WhatsApp details, and browser title without the removed tagline. The Contact panel was opened in production and verified to expose WhatsApp `01797953059`, `md.sonet.mia01@gmail.com`, and `mdsonetmia.vercel.app`.
+
+The original Vercel TypeScript serverless functions failed before authentication with `FUNCTION_INVOCATION_FAILED`. A dependency-free JavaScript health canary returned `200 {"ok":true,"service":"sweet-ai-health"}`, confirming the platform function runtime. The Paid API was then migrated to a direct JavaScript handler; an unauthenticated production POST to `/api/studio` now returns the expected JSON `401 {"error":"not_authenticated"}` rather than plain-text server failure. A logged-in paid generation remains required for final provider and credit-deduction validation.
+
+## Payload and Billing investigation
+
+A logged-in Paid API request with an oversized image reached Vercel but was rejected before the handler with `413 FUNCTION_PAYLOAD_TOO_LARGE`. The client now prepares a compact image before every Paid API request and performs one materially smaller retry only after a 413 response. The production Billing route previously failed during render with `TypeError: Cannot read properties of undefined (reading 'replace')`, traced to an undefined WhatsApp configuration being passed to the phone-number formatter. Billing now uses safe configured-value fallbacks and guarded payment submission. A local unauthenticated navigation to the rebuilt Billing route redirects to the landing page without the earlier error screen.

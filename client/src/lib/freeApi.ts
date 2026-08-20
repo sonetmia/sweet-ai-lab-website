@@ -5,6 +5,7 @@ export const groqVisionModel = "qwen/qwen3.6-27b";
 export const groqTextFallbackModel = "openai/gpt-oss-120b";
 export const VISION_IMAGE_MAX_DATA_URL_CHARS = 900_000;
 export const COMPACT_VISION_IMAGE_MAX_DATA_URL_CHARS = 450_000;
+export const PAID_API_RETRY_IMAGE_MAX_DATA_URL_CHARS = 180_000;
 
 type ApiKeyStore = Partial<Record<FreeProvider, string[]>>;
 type ModelStore = Record<string, string>;
@@ -215,6 +216,38 @@ async function normalizeVisionImage(image: string, compact = false, force = fals
     output = workingCanvas.toDataURL("image/jpeg", compact ? 0.68 : 0.74);
   }
   return output;
+}
+
+async function shrinkImageDataUrl(image: string, limit: number) {
+  const source = await loadBrowserImage(image);
+  let workingCanvas = document.createElement("canvas");
+  const firstScale = Math.min(1, 720 / Math.max(source.naturalWidth, source.naturalHeight));
+  workingCanvas.width = Math.max(1, Math.round(source.naturalWidth * firstScale));
+  workingCanvas.height = Math.max(1, Math.round(source.naturalHeight * firstScale));
+  const context = workingCanvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not compact this image for the Paid API.");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(source, 0, 0, workingCanvas.width, workingCanvas.height);
+  let output = workingCanvas.toDataURL("image/jpeg", 0.68);
+  for (let pass = 0; output.length > limit && pass < 5; pass += 1) {
+    const smaller = document.createElement("canvas");
+    smaller.width = Math.max(1, Math.round(workingCanvas.width * 0.64));
+    smaller.height = Math.max(1, Math.round(workingCanvas.height * 0.64));
+    const smallerContext = smaller.getContext("2d");
+    if (!smallerContext) throw new Error("Your browser could not compact this image for the Paid API.");
+    smallerContext.imageSmoothingEnabled = true;
+    smallerContext.imageSmoothingQuality = "high";
+    smallerContext.drawImage(workingCanvas, 0, 0, smaller.width, smaller.height);
+    workingCanvas = smaller;
+    output = workingCanvas.toDataURL("image/jpeg", 0.62);
+  }
+  return output;
+}
+
+export async function preparePaidApiImage(image: string, retry = false) {
+  const compact = await normalizeVisionImage(image, true, true);
+  return retry ? shrinkImageDataUrl(compact, PAID_API_RETRY_IMAGE_MAX_DATA_URL_CHARS) : compact;
 }
 
 function loadBrowserImage(url: string) {
