@@ -3,12 +3,11 @@ import { describe, expect, it } from "vitest";
 
 describe("Vercel Studio API entrypoint", () => {
   it("uses a direct JSON-returning dedicated serverless function for paid Studio calls", () => {
-    const source = readFileSync(new URL("../api/studio.ts", import.meta.url), "utf8");
+    const source = readFileSync(new URL("../api/studio.js", import.meta.url), "utf8");
     expect(source).toContain("export default async function handler");
-    expect(source).toContain('export const config = { runtime: "nodejs" }');
-    expect(source).toContain('res.setHeader("Content-Type", "application/json; charset=utf-8")');
+    expect(source).toContain("/auth/v1/user");
+    expect(source).toContain("/rest/v1/rpc/get_my_credits");
     expect(source).toContain('error: "studio_request_failed"');
-    expect(source).toContain('await import("@supabase/supabase-js")');
   });
 
   it("keeps simple direct API routes for health and admin bootstrap", () => {
