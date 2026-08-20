@@ -71,4 +71,7 @@
 - [x] Add non-crashing Background Remover recovery for worker/model initialization failures and preserve one-credit success-only charging.
 - [ ] Verify live own-key metadata and image-to-prompt generation with a real configured provider after publishing the stability fix.
 - [ ] Verify logged-in production 2×/4× upscaling, background removal, individual PNG, and ZIP output after the stability fix.
-- [ ] Run end-to-end regression checks and publish the complete creator-tool stability fix through GitHub and Vercel.
+- [x] Run local regression checks and publish the complete creator-tool stability fix through GitHub and Vercel.
+- [x] Normalize and compress image payloads in the browser before Free API requests so Groq and other vision providers do not receive oversized base64 images.
+- [x] Add 413-specific retry/error recovery that re-sends a smaller normalized image without exposing user API keys or charging application credits.
+- [ ] Test and publish the oversized-image Free API reliability fix through GitHub and Vercel.

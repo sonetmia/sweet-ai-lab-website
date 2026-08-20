@@ -3,6 +3,8 @@ export type FreeProvider = (typeof freeProviders)[number];
 export const openRouterFreeVisionModel = "nvidia/nemotron-nano-12b-v2-vl:free";
 export const groqVisionModel = "qwen/qwen3.6-27b";
 export const groqTextFallbackModel = "openai/gpt-oss-120b";
+export const VISION_IMAGE_MAX_DATA_URL_CHARS = 900_000;
+export const COMPACT_VISION_IMAGE_MAX_DATA_URL_CHARS = 450_000;
 
 type ApiKeyStore = Partial<Record<FreeProvider, string[]>>;
 type ModelStore = Record<string, string>;
@@ -172,7 +174,56 @@ async function readErrorMessage(response: Response) {
 }
 
 function isRetryableError(error: unknown) {
-  return error instanceof ProviderApiError && [400, 401, 403, 404, 408, 409, 429, 500, 502, 503, 504].includes(error.status);
+  return error instanceof ProviderApiError && [400, 401, 403, 404, 408, 409, 413, 429, 500, 502, 503, 504].includes(error.status);
+}
+
+export function needsVisionImageNormalization(image: string, limit = VISION_IMAGE_MAX_DATA_URL_CHARS) {
+  return image.startsWith("data:image/") && image.length > limit;
+}
+
+async function normalizeVisionImage(image: string, compact = false, force = false) {
+  const limit = compact ? COMPACT_VISION_IMAGE_MAX_DATA_URL_CHARS : VISION_IMAGE_MAX_DATA_URL_CHARS;
+  if (!force && !needsVisionImageNormalization(image, limit)) return image;
+  const source = await loadBrowserImage(image);
+  const targetEdge = compact ? 1024 : 1600;
+  const scale = Math.min(1, targetEdge / Math.max(source.naturalWidth, source.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(source.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(source.naturalHeight * scale));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not prepare a safe image payload for the AI provider.");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  let workingCanvas = canvas;
+  let quality = compact ? 0.78 : 0.86;
+  let output = workingCanvas.toDataURL("image/jpeg", quality);
+  while (output.length > limit && quality > 0.42) {
+    quality -= 0.08;
+    output = workingCanvas.toDataURL("image/jpeg", quality);
+  }
+  for (let pass = 0; output.length > limit && pass < 4; pass += 1) {
+    const smaller = document.createElement("canvas");
+    smaller.width = Math.max(1, Math.round(workingCanvas.width * 0.7));
+    smaller.height = Math.max(1, Math.round(workingCanvas.height * 0.7));
+    const smallerContext = smaller.getContext("2d");
+    if (!smallerContext) throw new Error("Your browser could not compact this image for the AI provider.");
+    smallerContext.imageSmoothingEnabled = true;
+    smallerContext.imageSmoothingQuality = "high";
+    smallerContext.drawImage(workingCanvas, 0, 0, smaller.width, smaller.height);
+    workingCanvas = smaller;
+    output = workingCanvas.toDataURL("image/jpeg", compact ? 0.68 : 0.74);
+  }
+  return output;
+}
+
+function loadBrowserImage(url: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("The selected image could not be prepared for the AI provider."));
+    image.src = url;
+  });
 }
 
 async function callGemini(key: string, model: string, prompt: string, image: string | null) {
@@ -214,12 +265,23 @@ async function callOpenAiCompatible(provider: Exclude<FreeProvider, "Gemini">, k
 
 async function generateWithProviderKey(provider: FreeProvider, key: string, prompt: string, image: string | null) {
   let model = await detectBestModel(provider, key, Boolean(image));
+  const run = async (imagePayload: string | null) => {
+    try {
+      return provider === "Gemini" ? await callGemini(key, model.model, prompt, imagePayload) : await callOpenAiCompatible(provider, key, model.model, prompt, imagePayload);
+    } catch (error) {
+      if (!(error instanceof ProviderApiError) || error.status !== 404) throw error;
+      model = await detectBestModel(provider, key, Boolean(imagePayload), true);
+      return provider === "Gemini" ? await callGemini(key, model.model, prompt, imagePayload) : await callOpenAiCompatible(provider, key, model.model, prompt, imagePayload);
+    }
+  };
+  const normalizedImage = image ? await normalizeVisionImage(image) : null;
   try {
-    return { output: provider === "Gemini" ? await callGemini(key, model.model, prompt, image) : await callOpenAiCompatible(provider, key, model.model, prompt, image), model: model.model };
+    return { output: await run(normalizedImage), model: model.model };
   } catch (error) {
-    if (!(error instanceof ProviderApiError) || error.status !== 404) throw error;
-    model = await detectBestModel(provider, key, Boolean(image), true);
-    return { output: provider === "Gemini" ? await callGemini(key, model.model, prompt, image) : await callOpenAiCompatible(provider, key, model.model, prompt, image), model: model.model };
+    if (!(error instanceof ProviderApiError) || error.status !== 413 || !image) throw error;
+    const compactImage = await normalizeVisionImage(image, true, true);
+    if (compactImage === normalizedImage) throw error;
+    return { output: await run(compactImage), model: model.model };
   }
 }
 

@@ -38,3 +38,5 @@ GitHub commit `e0d1bc0` deployed without a public rendering regression. The prod
 ## Creator-tool stability validation
 
 The hosted OpenRouter credential returned `402 Insufficient credits` for a minimal image completion, explaining why the previous default paid path could not generate metadata or prompts. Studio now defaults to the user’s own-key path. In a browser against the local build, both lazy worker modules constructed successfully and the high-quality canvas fallback produced a valid 24 × 16 PNG from a 12 × 8 source. Logged-in production validation remains required for a real image background-removal run and an actual configured own-key generation request.
+
+GitHub commit `9aa434c` deployed without a public rendering regression and is served by production bundle `index-DSovdaBQ.js`. Function names are minified in the deployed JavaScript, but the bundle includes the preserved `AI acceleration is unavailable in this browser`, `simple-background fallback`, and `Own key` recovery/interface text. This confirms the stability release is live; a logged-in production run remains required for real image and own-key behavior.
