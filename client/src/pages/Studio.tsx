@@ -38,7 +38,7 @@ type QueueItem = { id: string; file: File; preview: string; status: "queued" | "
 type Credits = { credits: number; plan: string; expired: boolean; expiresAt: string | null };
 type ApiMode = "paid" | "free";
 
-const initialCredits: Credits = { credits: 500, plan: "Free", expired: false, expiresAt: null };
+const initialCredits: Credits = { credits: 200, plan: "Free", expired: false, expiresAt: null };
 
 function wordLabel(value: number) {
   return `${value} words`;
@@ -49,6 +49,8 @@ export default function Studio() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [sessionReady, setSessionReady] = useState(false);
   const [email, setEmail] = useState("");
+  const [profileName, setProfileName] = useState("Studio member");
+  const [profileImage, setProfileImage] = useState("");
   const [credits, setCredits] = useState<Credits>(initialCredits);
   const [activeTab, setActiveTab] = useState<SideTab>("mode");
   const [mode, setMode] = useState<Mode>("metadata");
@@ -59,6 +61,7 @@ export default function Studio() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dark, setDark] = useState(() => localStorage.getItem("sweet-theme") !== "light");
   const [accountOpen, setAccountOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [titleRange, setTitleRange] = useState([6, 12]);
   const [keywordRange, setKeywordRange] = useState([35, 40]);
   const [descriptionRange, setDescriptionRange] = useState([12, 30]);
@@ -81,7 +84,7 @@ export default function Studio() {
         navigate("/");
         return;
       }
-      setEmail(data.session.user.email ?? "Studio member");
+      updateProfile(data.session.user);
       await bootstrapConfiguredAdmin();
       setSessionReady(true);
       await refreshCredits();
@@ -89,7 +92,7 @@ export default function Studio() {
     void establishSession();
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!nextSession) navigate("/");
-      else setEmail(nextSession.user.email ?? "Studio member");
+      else updateProfile(nextSession.user);
     });
     return () => listener.subscription.unsubscribe();
   }, [navigate]);
@@ -108,6 +111,13 @@ export default function Studio() {
   async function signOut() {
     await supabase.auth.signOut();
     navigate("/");
+  }
+
+  function updateProfile(user: { email?: string | null; user_metadata?: Record<string, unknown> }) {
+    const metadata = user.user_metadata ?? {};
+    setEmail(user.email ?? "Studio member");
+    setProfileName(String(metadata.full_name ?? metadata.name ?? user.email?.split("@")[0] ?? "Studio member"));
+    setProfileImage(String(metadata.avatar_url ?? metadata.picture ?? ""));
   }
 
   function addFiles(fileList: FileList | File[]) {
@@ -158,7 +168,14 @@ export default function Studio() {
           const { data: sessionData } = await supabase.auth.getSession();
           if (!sessionData.session) throw new Error("Your session has expired. Please sign in again.");
           const response = await fetch("/api/studio", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionData.session.access_token}` }, body: JSON.stringify({ image, mode, tier: paidTier, settings: studioSettings() }) });
-          const payload = await response.json() as { error?: string; detail?: string; result?: QueueItem["output"]; credits?: number };
+          const responseText = await response.text();
+          let payload: { error?: string; detail?: string; result?: QueueItem["output"]; credits?: number };
+          try {
+            payload = JSON.parse(responseText) as typeof payload;
+          } catch {
+            const summary = responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 140);
+            throw new Error(`Paid API server error (${response.status}). ${summary || "The server did not return a valid response. Please try again later."}`);
+          }
           if (!response.ok || !payload.result) throw new Error([payload.error?.replaceAll("_", " "), payload.detail].filter(Boolean).join(": ") || "The paid generation request could not be completed.");
           output = payload.result; remaining = payload.credits;
         } else {
@@ -217,7 +234,7 @@ export default function Studio() {
     <div className={`studio-shell ${dark ? "studio-dark" : ""}`}>
       <header className="studio-header">
         <div className="studio-header-left"><a className="studio-brand" href="/"><span className="brand-s">S</span> Sweet AI Lab by SONET</a><button className="icon-button" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle studio controls"><PanelLeft size={17} /></button></div>
-        <div className="studio-header-right"><span className="studio-credit"><i /> {credits.expired ? "Credits expired" : `${credits.credits.toLocaleString()} credits`}</span><button className="header-link">AI-Powered Tools for Creators</button><button className="header-link">Contact</button><button className="header-link" onClick={() => navigate("/billing")}>Pricing</button><button className="api-button" onClick={() => setApiModalOpen(true)}><KeyRound size={15} /> API keys</button><button className="icon-button" onClick={() => setDark(!dark)} aria-label="Toggle color theme">{dark ? <Sun size={16} /> : <Moon size={16} />}</button><button className="avatar-button" onClick={() => setAccountOpen(!accountOpen)} aria-expanded={accountOpen}><CircleUserRound size={20} /></button>{accountOpen && <div className="account-menu"><span className="account-email">{email}</span><div><b>{credits.plan}</b><span>{credits.credits.toLocaleString()} credits</span></div><button className="account-admin" onClick={() => navigate("/admin")}>Administrator console</button><button onClick={signOut}><LogOut size={14} /> Sign out</button></div>}</div>
+        <div className="studio-header-right"><span className="studio-credit"><i /> {credits.expired ? "Credits expired" : `${credits.credits.toLocaleString()} credits`}</span><button className="header-link" onClick={() => setContactOpen(!contactOpen)}>Contact</button><button className="header-link" onClick={() => navigate("/billing")}>Plans</button><button className="api-button" onClick={() => setApiModalOpen(true)}><KeyRound size={15} /> API keys</button><button className="icon-button" onClick={() => setDark(!dark)} aria-label="Toggle color theme">{dark ? <Sun size={16} /> : <Moon size={16} />}</button><button className="avatar-button" onClick={() => setAccountOpen(!accountOpen)} aria-expanded={accountOpen} aria-label="Open profile">{profileImage ? <img src={profileImage} alt="Google profile" referrerPolicy="no-referrer" /> : <CircleUserRound size={20} />}</button>{contactOpen && <div className="studio-contact-menu"><b>Contact SONET</b><a href="https://wa.me/8801797953059" target="_blank" rel="noreferrer">WhatsApp · 01797953059</a><a href="mailto:md.sonet.mia01@gmail.com">md.sonet.mia01@gmail.com</a><a href="https://mdsonetmia.vercel.app" target="_blank" rel="noreferrer">mdsonetmia.vercel.app</a></div>}{accountOpen && <div className="account-menu"><div className="account-profile">{profileImage ? <img src={profileImage} alt="Google profile" referrerPolicy="no-referrer" /> : <CircleUserRound size={28} />}<span><b>{profileName}</b><small>{email}</small></span></div><div><b>{credits.plan}</b><span>{credits.credits.toLocaleString()} credits</span></div><button className="account-admin" onClick={() => navigate("/admin")}>Administrator console</button><button onClick={signOut}><LogOut size={14} /> Sign out</button></div>}</div>
       </header>
       <div className="studio-layout">
         <aside className={sidebarOpen ? "studio-sidebar" : "studio-sidebar collapsed"}>

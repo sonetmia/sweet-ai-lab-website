@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import { plans } from "../client/src/lib/catalog";
 
 describe("initial Free credit contract", () => {
-  it("shows a 500-credit Free plan in the public catalog", () => {
-    expect(plans.free).toMatchObject({ credits: 500, price: "৳0" });
+  it("shows the requested 200-credit Free plan in the public catalog", () => {
+    expect(plans.free).toMatchObject({ credits: 200, price: "৳0" });
   });
 
-  it("creates new Free profiles with 500 credits and preserves historic spent balances", () => {
+  it("creates new Free profiles with the requested 200 credits without changing existing balances", () => {
     const schema = readFileSync(new URL("../supabase/schema.sql", import.meta.url), "utf8");
-    expect(schema).toContain("credits integer not null default 500");
-    expect(schema).toContain("'free'::public.plan_name,\n    500");
-    expect(schema).toContain("not exists (select 1 from public.credit_ledger");
+    expect(schema).toContain("credits integer not null default 200");
+    expect(schema).toContain("'free'::public.plan_name,\n    200");
+    expect(schema).not.toContain("set credits = 200");
   });
 });

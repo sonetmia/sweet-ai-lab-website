@@ -74,4 +74,11 @@
 - [x] Run local regression checks and publish the complete creator-tool stability fix through GitHub and Vercel.
 - [x] Normalize and compress image payloads in the browser before Free API requests so Groq and other vision providers do not receive oversized base64 images.
 - [x] Add 413-specific retry/error recovery that re-sends a smaller normalized image without exposing user API keys or charging application credits.
-- [ ] Test and publish the oversized-image Free API reliability fix through GitHub and Vercel.
+- [x] Test and publish the oversized-image Free API reliability fix through GitHub and Vercel.
+- [x] Set the visible bKash receiver and WhatsApp contact number to 01797953059, with a click-to-open contact panel showing WhatsApp, Gmail, and the provided website.
+- [x] Make plan cards more prominent, set the visible Free plan allowance to 200 credits, and rewrite complex public copy in clear simple English.
+- [x] Remove the requested AI-Powered Tools for Creators copy and replace the plan-section headline with plain-English wording.
+- [x] Add accessible selection and click feedback animations while preserving reduced-motion preferences and smooth runtime behavior.
+- [x] Show the signed-in Google account avatar and profile details in the protected website profile area.
+- [ ] Fix Paid API generation response parsing so non-JSON server responses are reported clearly instead of causing an Unexpected token error.
+- [ ] Test and publish the payment, contact, copy, profile, animation, and Paid API reliability update through GitHub and Vercel.

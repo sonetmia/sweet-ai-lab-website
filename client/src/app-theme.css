@@ -10,6 +10,11 @@ html[data-theme="dark"] .hero-lead, html[data-theme="dark"] .section-intro > p, 
 html[data-theme="dark"] .hero-art, html[data-theme="dark"] .tool-card, html[data-theme="dark"] .plan-card, html[data-theme="dark"] .closing-section { border-color: #35533e; background: #1a3527; }
 html[data-theme="dark"] .tone-mint, html[data-theme="dark"] .tone-violet, html[data-theme="dark"] .tone-amber { background: #1a3527; }
 html[data-theme="dark"] .plan-card.featured { border-color: #4f9d6c; background: #203e2d; }
+html[data-theme="dark"] .plan-card strong { color: #f1f8f2; }
+html[data-theme="dark"] .plan-card .plan-credits { color: #87dfa5; }
+html[data-theme="dark"] .plan-card p { color: #b7cdbb; }
+html[data-theme="dark"] .plan-card button { border-color: #4f9d6c; color: #a5edbb; background: #183427; }
+html[data-theme="dark"] .plan-card.featured button { color: #fff; background: #277d50; }
 html[data-theme="dark"] .landing-footer { border-color: #2d4b38; color: #91a99a; }
 html[data-theme="dark"] .billing-shell, html[data-theme="dark"] .admin-shell, html[data-theme="dark"] .remover-shell { color: #eaf3eb; background: #12271d; }
 html[data-theme="dark"] .billing-header, html[data-theme="dark"] .admin-header, html[data-theme="dark"] .remover-header { border-color: #2c4b38; background: #183126; }
