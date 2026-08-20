@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { buildStudioPrompt, parseMetadataResult, type StudioMode } from "../server/studioPrompt";
 
 type VercelRequestLike = { method?: string; headers: Record<string, string | string[] | undefined>; body?: unknown };
@@ -33,6 +32,7 @@ export default async function handler(req: VercelRequestLike, res: VercelRespons
     const projectUrl = requiredEnv("VITE_SUPABASE_URL");
     const anonKey = requiredEnv("VITE_SUPABASE_ANON_KEY");
     const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+    const { createClient } = await import("@supabase/supabase-js");
     const admin = createClient(projectUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: userData, error: userError } = await admin.auth.getUser(accessToken);
     if (userError || !userData.user) return res.status(401).json({ error: "not_authenticated" });

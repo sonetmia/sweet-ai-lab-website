@@ -7,6 +7,7 @@ describe("Vercel Studio API entrypoint", () => {
     expect(source).toContain("export default async function handler");
     expect(source).toContain('res.setHeader("Content-Type", "application/json; charset=utf-8")');
     expect(source).toContain('error: "studio_request_failed"');
+    expect(source).toContain('await import("@supabase/supabase-js")');
   });
 
   it("keeps the wildcard Vercel API route on the same JSON-only Studio handler", () => {
@@ -14,5 +15,6 @@ describe("Vercel Studio API entrypoint", () => {
     expect(source).toContain('import studioHandler from "./studio"');
     expect(source).toContain("return studioHandler(req, res)");
     expect(source).not.toContain('import express');
+    expect(source).toContain('await import("@supabase/supabase-js")');
   });
 });

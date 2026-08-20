@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import studioHandler from "./studio";
 
 type RequestLike = { method?: string; url?: string; headers: Record<string, string | string[] | undefined>; body?: unknown };
@@ -17,6 +16,7 @@ async function adminBootstrap(req: RequestLike, res: ResponseLike) {
   if (!token) return res.status(401).json({ error: "not_authenticated" });
   if (!projectUrl || !serviceRoleKey || !adminEmail) return res.status(500).json({ error: "admin_bootstrap_not_configured" });
   try {
+    const { createClient } = await import("@supabase/supabase-js");
     const admin = createClient(projectUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data, error } = await admin.auth.getUser(token);
     if (error || !data.user) return res.status(401).json({ error: "not_authenticated" });
