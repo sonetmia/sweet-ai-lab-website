@@ -11,10 +11,10 @@ describe("Vercel Studio API entrypoint", () => {
     expect(source).toContain('await import("@supabase/supabase-js")');
   });
 
-  it("keeps simple direct Node API routes for health and admin bootstrap", () => {
-    const ping = readFileSync(new URL("../api/ping.ts", import.meta.url), "utf8");
+  it("keeps simple direct API routes for health and admin bootstrap", () => {
+    const health = readFileSync(new URL("../api/health.js", import.meta.url), "utf8");
     const admin = readFileSync(new URL("../api/admin/bootstrap.ts", import.meta.url), "utf8");
-    expect(ping).toContain('service: "sweet-ai-api"');
+    expect(health).toContain('service: "sweet-ai-health"');
     expect(admin).toContain('export const config = { runtime: "nodejs" }');
     expect(admin).toContain('error: "admin_bootstrap_failed"');
   });
