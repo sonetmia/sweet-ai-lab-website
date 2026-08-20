@@ -1,6 +1,6 @@
 import { bootstrapConfiguredAdmin } from "@/lib/admin";
 import { platforms, promptStyles } from "@/lib/catalog";
-import { createFreePrompt, freeProviders, generateWithFreeApi, loadFreeKeys, normalizeMetadata, removeFreeKey, saveFreeKey, type FreeProvider } from "@/lib/freeApi";
+import { addFreeKeyWithAutoModel, createFreePrompt, freeProviders, generateWithFreeApi, getSelectedFreeModelLabel, loadFreeKeys, normalizeMetadata, removeFreeKey, type FreeProvider } from "@/lib/freeApi";
 import { supabase } from "@/lib/supabase";
 import "./api-modal.css";
 import "./studio.css";
@@ -70,6 +70,8 @@ export default function Studio() {
   const [freeProvider, setFreeProvider] = useState<FreeProvider>("Gemini");
   const [newKey, setNewKey] = useState("");
   const [freeKeyVersion, setFreeKeyVersion] = useState(0);
+  const [detectingKey, setDetectingKey] = useState(false);
+  const [freeKeyMessage, setFreeKeyMessage] = useState("");
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
@@ -190,8 +192,21 @@ export default function Studio() {
     URL.revokeObjectURL(link.href);
   }
 
-  function addNewFreeKey() {
-    if (saveFreeKey(freeProvider, newKey)) { setNewKey(""); setFreeKeyVersion((version) => version + 1); }
+  async function addNewFreeKey() {
+    if (detectingKey) return;
+    setDetectingKey(true);
+    setFreeKeyMessage("Checking this key and selecting its best compatible model…");
+    try {
+      const result = await addFreeKeyWithAutoModel(freeProvider, newKey);
+      setNewKey("");
+      setFreeKeyVersion((version) => version + 1);
+      const selectionLabel = result.source === "detected" ? `Auto-detected model: ${result.model}.` : `Documented default: ${result.model}. Its availability will be verified on your first request.`;
+      setFreeKeyMessage(result.added ? `Ready: ${selectionLabel}` : `This key was already added. ${selectionLabel}`);
+    } catch (error) {
+      setFreeKeyMessage(error instanceof Error ? error.message : "This key could not be configured.");
+    } finally {
+      setDetectingKey(false);
+    }
   }
 
   if (!sessionReady) {
@@ -244,7 +259,7 @@ export default function Studio() {
           </section>
         </main>
       </div>
-      {apiModalOpen && <div className="api-modal-backdrop" onClick={() => setApiModalOpen(false)}><section className="api-modal" onClick={(event) => event.stopPropagation()}><button className="api-modal-close" onClick={() => setApiModalOpen(false)} aria-label="Close API settings"><X size={16} /></button><p className="side-label">AI generation path</p><h2>Choose how to power your work.</h2><div className="api-mode-switch"><button className={apiMode === "paid" ? "active" : ""} onClick={() => setApiMode("paid")}>Paid API</button><button className={apiMode === "free" ? "active" : ""} onClick={() => setApiMode("free")}>Free API</button></div>{apiMode === "paid" ? <div className="paid-options"><p>Secure provider credentials stay on the server. Standard costs 2 credits per successful image; Premium costs 3.</p><button className={paidTier === "standard" ? "selected" : ""} onClick={() => setPaidTier("standard")}><span>Standard</span><b>Llama 4 Scout · 2 credits</b></button><button className={paidTier === "premium" ? "selected" : ""} onClick={() => setPaidTier("premium")}><span>Premium</span><b>Llama 4 Maverick · 3 credits</b></button></div> : <div className="free-options"><p>Keys stay only in this tab’s temporary memory, never local storage. They are cleared when the tab closes. Free API generations use one account credit after success and rotate through added keys.</p><label>Provider<select value={freeProvider} onChange={(event) => setFreeProvider(event.target.value as FreeProvider)}>{freeProviders.map((provider) => <option key={provider}>{provider}</option>)}</select></label><div className="key-add"><input type="password" value={newKey} onChange={(event) => setNewKey(event.target.value)} placeholder={`Paste a ${freeProvider} API key`} /><button onClick={addNewFreeKey}>Add key</button></div><div className="saved-keys" key={freeKeyVersion}>{(loadFreeKeys()[freeProvider] ?? []).length ? (loadFreeKeys()[freeProvider] ?? []).map((key) => <div key={key}><span>{key.slice(0, 5)}••••••••{key.slice(-4)}</span><button onClick={() => { removeFreeKey(freeProvider, key); setFreeKeyVersion((version) => version + 1); }}>Remove</button></div>) : <span>No {freeProvider} keys added in this tab.</span>}</div></div>}<button className="api-modal-done" onClick={() => setApiModalOpen(false)}>Use this path <Check size={15} /></button></section></div>}
+      {apiModalOpen && <div className="api-modal-backdrop" onClick={() => setApiModalOpen(false)}><section className="api-modal" onClick={(event) => event.stopPropagation()}><button className="api-modal-close" onClick={() => setApiModalOpen(false)} aria-label="Close API settings"><X size={16} /></button><p className="side-label">AI generation path</p><h2>Choose how to power your work.</h2><div className="api-mode-switch"><button className={apiMode === "paid" ? "active" : ""} onClick={() => setApiMode("paid")}>Paid API</button><button className={apiMode === "free" ? "active" : ""} onClick={() => setApiMode("free")}>Own-key API</button></div>{apiMode === "paid" ? <div className="paid-options"><p>Secure provider credentials stay on the server. Standard costs 2 credits per successful image; Premium costs 3.</p><button className={paidTier === "standard" ? "selected" : ""} onClick={() => setPaidTier("standard")}><span>Standard</span><b>Llama 4 Scout · 2 credits</b></button><button className={paidTier === "premium" ? "selected" : ""} onClick={() => setPaidTier("premium")}><span>Premium</span><b>Llama 4 Maverick · 3 credits</b></button></div> : <div className="free-options"><p>Keys stay only in this tab’s temporary memory, never local storage. Providers with a model catalog are auto-detected when you add a key. A provider without a reachable catalog uses its documented vision default and verifies it on first use. If a configured provider reaches a quota, the next configured provider is tried automatically. Provider quotas and pricing remain controlled by each provider account.</p><label>Provider<select value={freeProvider} onChange={(event) => { setFreeProvider(event.target.value as FreeProvider); setFreeKeyMessage(""); }}>{freeProviders.map((provider) => <option key={provider}>{provider}</option>)}</select></label><div className="key-add"><input type="password" value={newKey} onChange={(event) => setNewKey(event.target.value)} placeholder={`Paste a ${freeProvider} API key`} /><button onClick={() => void addNewFreeKey()} disabled={detectingKey}>{detectingKey ? "Checking…" : "Add key"}</button></div>{freeKeyMessage && <small className="api-key-status">{freeKeyMessage}</small>}<div className="saved-keys" key={freeKeyVersion}>{(loadFreeKeys()[freeProvider] ?? []).length ? (loadFreeKeys()[freeProvider] ?? []).map((key) => <div key={key}><span>{key.slice(0, 5)}••••••••{key.slice(-4)}<small>{getSelectedFreeModelLabel(freeProvider, key)}</small></span><button onClick={() => { removeFreeKey(freeProvider, key); setFreeKeyVersion((version) => version + 1); }}>Remove</button></div>) : <span>No {freeProvider} keys added in this tab.</span>}</div></div>}<button className="api-modal-done" onClick={() => setApiModalOpen(false)}>Use this path <Check size={15} /></button></section></div>}
     </div>
   );
 }

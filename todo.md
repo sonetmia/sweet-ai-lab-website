@@ -33,14 +33,14 @@
 - [x] Transfer the complete Sweet AI Lab by SONET source, Supabase schema, Vercel configuration, and deployment documentation without committing secrets.
 - [x] Verify the GitHub commit and report the Vercel import steps.
 - [x] Send the user the exact Vercel import, environment-variable, Supabase, and Google OAuth production configuration sequence.
-- [ ] Verify Supabase dashboard access and production URL configuration for the deployed Sweet AI Lab application.
-- [ ] Add the Vercel production domain to Supabase Site URL and the required studio redirect URL to Additional Redirect URLs.
-- [ ] Confirm Google OAuth production callback and run a production sign-in readiness check.
+- [x] Verify Supabase dashboard access and production URL configuration for the deployed Sweet AI Lab application.
+- [x] Add the Vercel production domain to Supabase Site URL and the required studio redirect URL to Additional Redirect URLs.
+- [x] Confirm Google OAuth production callback and run a production sign-in readiness check.
 - [x] Diagnose the Vercel production blank-screen failure at sweet-ai-lab-website.vercel.app: the deployed Vite bundle has no embedded Supabase URL or public key and therefore throws the missing browser configuration guard before React can mount.
 - [x] Apply and deploy the smallest fix that restores production rendering without changing application features.
 - [x] Verify the repaired production landing page before resuming Google OAuth sign-in testing.
 - [x] Verify that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are saved under the Vercel Production environment rather than only Preview or Development.
-- [ ] Trigger and confirm a fresh production deployment that includes the configured browser variables instead of the stale index-BHYExqor.js bundle.
+- [x] Trigger and confirm a fresh production deployment that includes the configured browser variables instead of the stale index-BHYExqor.js bundle.
 - [x] Diagnose and correct the OpenRouter Free API image-to-prompt failure by selecting a current free vision-capable OpenRouter model and surfacing provider error details.
 - [x] Display the requested Gmail address in the public contact section and payment-facing contact information.
 - [x] Change the Pro plan price from ৳400 to ৳200 consistently across the landing page, billing workflow, database plan activation, and payment request messages.
@@ -62,3 +62,7 @@
 - [x] Simplify and shorten the public pre-login hero copy without changing the authentication entry point or core product positioning.
 - [ ] Complete a logged-in production acceptance test of AI 2×/4× upscaling, refined background removal, and Groq image metadata generation.
 - [x] Test and publish the processing, Groq, credit, and hero improvements through GitHub and Vercel.
+- [x] Expand Free API support with additional image-capable providers while preserving Gemini, Groq, Mistral, OpenAI, and OpenRouter in their existing order.
+- [x] Detect an API key’s available models automatically when it is added and select the best compatible model for image metadata or prompt generation.
+- [x] Handle provider quota, rate-limit, authentication, and model-unavailable responses with a usable automatic fallback or clear next-provider instruction before retrying work.
+- [ ] Test and publish the multi-provider automatic model-selection and fallback update through GitHub and Vercel.
