@@ -8,7 +8,12 @@ import "./background-remover.css";
 type RemovalItem = { id: string; file: File; inputUrl: string; resultUrl?: string; state: "queued" | "processing" | "done" | "error"; error?: string };
 type WorkerResponse = { type: "progress"; percentage: number } | { type: "ready" } | { type: "done"; id: string; width: number; height: number; channels: number; pixels: Uint8ClampedArray } | { type: "error"; id: string | null; message: string };
 
-const worker = new Worker(new URL("../workers/bgRemoval.worker.ts", import.meta.url), { type: "module" });
+let backgroundWorker: Worker | null = null;
+
+function getBackgroundWorker() {
+  if (!backgroundWorker) backgroundWorker = new Worker(new URL("../workers/bgRemoval.worker.ts", import.meta.url), { type: "module" });
+  return backgroundWorker;
+}
 
 export default function BackgroundRemover() {
   const [, navigate] = useLocation();
@@ -21,6 +26,7 @@ export default function BackgroundRemover() {
   const [working, setWorking] = useState(false);
   const [creditCount, setCreditCount] = useState<number | null>(null);
   const [message, setMessage] = useState("Preparing the local AI model…");
+  const [fallbackMode, setFallbackMode] = useState(false);
 
   useEffect(() => {
     itemsRef.current = items;
@@ -32,11 +38,17 @@ export default function BackgroundRemover() {
       if (!data.session) return navigate("/");
       const { data: creditData } = await supabase.rpc("get_my_credits");
       if (creditData?.success) setCreditCount(creditData.credits ?? 0);
-      worker.postMessage({ type: "load" });
+      try {
+        getBackgroundWorker().postMessage({ type: "load" });
+      } catch (error) {
+        setFallbackMode(true);
+        setReady(true);
+        setMessage(`Local AI startup is unavailable, so simple-background fallback is ready. ${error instanceof Error ? error.message : ""}`.trim());
+      }
     }
     void begin();
 
-    worker.onmessage = async (event: MessageEvent<WorkerResponse>) => {
+    const onWorkerMessage = async (event: MessageEvent<WorkerResponse>) => {
       const data = event.data;
       if (data.type === "progress") setProgress(Math.max(0, Math.min(100, data.percentage)));
       if (data.type === "ready") {
@@ -44,8 +56,15 @@ export default function BackgroundRemover() {
         setMessage("Your local model is ready.");
       }
       if (data.type === "error") {
-        if (data.id) setItems((current) => current.map((item) => item.id === data.id ? { ...item, state: "error", error: data.message } : item));
-        else setMessage(data.message);
+        if (data.id) {
+          setFallbackMode(true);
+          setMessage("The AI mask could not process this image, so Sweet AI Lab is retrying with its local simple-background fallback.");
+          setItems((current) => current.map((item) => item.id === data.id ? { ...item, state: "queued", error: undefined } : item));
+        } else {
+          setFallbackMode(true);
+          setReady(true);
+          setMessage("The AI model could not load in this browser. Local simple-background fallback is ready for images with a clean or solid backdrop.");
+        }
         setWorking(false);
       }
       if (data.type === "done") {
@@ -64,6 +83,17 @@ export default function BackgroundRemover() {
         }
       }
     };
+    const workerEventListener: EventListener = (event) => { void onWorkerMessage(event as MessageEvent<WorkerResponse>); };
+    let activeWorker: Worker | null = null;
+    try {
+      activeWorker = getBackgroundWorker();
+      activeWorker.addEventListener("message", workerEventListener);
+    } catch (error) {
+      setFallbackMode(true);
+      setReady(true);
+      setMessage(`Local AI startup is unavailable, so simple-background fallback is ready. ${error instanceof Error ? error.message : ""}`.trim());
+    }
+    return () => activeWorker?.removeEventListener("message", workerEventListener);
   }, [navigate]);
 
   function addFiles(fileList: FileList | File[]) {
@@ -109,7 +139,31 @@ export default function BackgroundRemover() {
     }
     setWorking(true);
     setItems((current) => current.map((item) => item.id === next.id ? { ...item, state: "processing" } : item));
-    worker.postMessage({ type: "process", id: next.id, url: next.inputUrl });
+    if (fallbackMode) {
+      await processFallbackCutout(next);
+      return;
+    }
+    try {
+      getBackgroundWorker().postMessage({ type: "process", id: next.id, url: next.inputUrl });
+    } catch {
+      setFallbackMode(true);
+      setMessage("The AI worker could not start this image, so Sweet AI Lab is using its local simple-background fallback.");
+      await processFallbackCutout(next);
+    }
+  }
+
+  async function processFallbackCutout(item: RemovalItem) {
+    try {
+      const resultUrl = await createSimpleBackgroundCutout(item.inputUrl);
+      const { data: debit } = await supabase.rpc("deduct_credit", { action_type: "bg_remove", amount: 1 });
+      if (!debit?.success) throw new Error(debit?.error === "insufficient_credits" ? "No credits remain for this image." : "The image was processed, but its credit charge could not be completed.");
+      setCreditCount(debit.credits ?? 0);
+      setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, resultUrl, state: "done" } : entry));
+    } catch (error) {
+      setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, state: "error", error: error instanceof Error ? error.message : "Could not complete this image." } : entry));
+    } finally {
+      setWorking(false);
+    }
   }
 
   useEffect(() => {
@@ -130,9 +184,9 @@ export default function BackgroundRemover() {
   return <div className="remover-shell">
     <header className="remover-header"><button onClick={() => navigate("/studio")}><ArrowLeft size={16} /> Studio</button><a href="/" className="remover-brand"><span className="brand-s">S</span> Sweet AI Lab by SONET</a><div><span>{creditCount === null ? "Checking credits" : `${creditCount} credits`}</span><button onClick={() => navigate("/image-upscaler")}>Image upscaler</button><AppThemeToggle /></div></header>
     <main className="remover-main">
-      <section className="remover-intro"><div className="remover-kicker">Browser-local AI workflow</div><h1>Cleaner cutouts,<br /><em>kept local.</em></h1><p>Use high-definition AI matting for smoother object boundaries while your image remains on this device.</p></section>
+      <section className="remover-intro"><div className="remover-kicker">Browser-local background workflow</div><h1>Cleaner cutouts,<br /><em>kept local.</em></h1><p>AI matting is used when available. If a browser cannot launch the local model, a simple-background fallback still creates a transparent PNG without uploading your image.</p></section>
       <section className="remover-section"><div className="remover-section-heading"><span>AI BACKGROUND REMOVER</span><p>One credit per successful image.</p></div>
-      {!ready ? <section className="model-card"><div className="model-row"><span className="model-loader"><Loader2 className="spin" size={22} /></span><div><strong>Preparing high-definition AI matting</strong><p>{message}</p></div><b>{Math.round(progress)}%</b></div><div className="progress-track"><i style={{ width: `${progress}%` }} /></div><small>First load downloads the model assets to your browser cache.</small></section> : <>
+      {!ready ? <section className="model-card"><div className="model-row"><span className="model-loader"><Loader2 className="spin" size={22} /></span><div><strong>Preparing local background matting</strong><p>{message}</p></div><b>{Math.round(progress)}%</b></div><div className="progress-track"><i style={{ width: `${progress}%` }} /></div><small>First load downloads the model assets to your browser cache.</small></section> : <>
         <section className={dragging ? "remover-dropzone dragging" : "remover-dropzone"} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop} onClick={() => pickerRef.current?.click()}><input ref={pickerRef} type="file" multiple accept="image/*" onChange={onFileChange} /><span><UploadCloud size={30} /></span><h2>Drop images to begin</h2><p>PNG, JPG, WEBP and GIF are supported. You can add several files to the same local queue.</p><button><ImagePlus size={15} /> Browse images</button><small>No image upload to the app server</small></section>
         {items.length > 0 && <section className="remover-controls"><span><b>{items.length}</b> {items.length === 1 ? "image" : "images"} in queue · <em>{completed} complete</em></span><div><button onClick={clear}><Trash2 size={14} /> Clear</button><button onClick={processNext} disabled={working || !items.some((item) => item.state === "queued")}><Play size={14} /> {working ? "Processing" : "Process queue"}</button><button className="download-all" onClick={downloadAll} disabled={!completed}><Download size={14} /> Download all PNGs</button></div></section>}
         {items.length > 0 && <section className="remover-grid">{items.map((item, index) => <article className="removal-card" key={item.id}><div className="removal-head"><span>IMAGE {String(index + 1).padStart(2, "0")}</span><button onClick={() => remove(item.id)} aria-label="Remove image"><X size={14} /></button></div><div className="before-after"><div><img src={item.inputUrl} alt="Original upload" /><small>Original</small></div><div className="result-checker">{item.state === "done" && item.resultUrl ? <img src={item.resultUrl} alt="Background removed" /> : item.state === "processing" ? <Loader2 className="spin" size={25} /> : item.state === "error" ? <span className="card-error">{item.error}</span> : <Square size={24} />}<small>{item.state === "done" ? "Transparent PNG" : item.state === "processing" ? "Removing…" : item.state === "error" ? "Could not process" : "Queued"}</small></div></div><footer><strong>{item.file.name}</strong>{item.resultUrl ? <a href={item.resultUrl} download={`${item.file.name.replace(/\.[^.]+$/, "")}-background-removed.png`}><Download size={13} /> PNG</a> : <span>{item.state === "processing" ? "One credit on success" : "Ready"}</span>}</footer></article>)}</section>}
@@ -174,6 +228,29 @@ async function compositeMask(sourceUrl: string, maskWidth: number, maskHeight: n
   sourceContext.globalCompositeOperation = "destination-in";
   sourceContext.drawImage(featherCanvas, 0, 0);
   return await new Promise<string>((resolve) => sourceCanvas.toBlob((blob) => resolve(URL.createObjectURL(blob!)), "image/png"));
+}
+
+async function createSimpleBackgroundCutout(sourceUrl: string) {
+  const source = await loadImage(sourceUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = source.naturalWidth;
+  canvas.height = source.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not prepare a local cutout canvas.");
+  context.drawImage(source, 0, 0);
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const samples = [0, canvas.width - 1, (canvas.height - 1) * canvas.width, canvas.width * canvas.height - 1]
+    .map((pixel) => pixel * 4)
+    .map((offset) => [imageData.data[offset], imageData.data[offset + 1], imageData.data[offset + 2]] as const);
+  const background = samples.reduce((total, color) => [total[0] + color[0], total[1] + color[1], total[2] + color[2]], [0, 0, 0]).map((value) => value / samples.length);
+  for (let offset = 0; offset < imageData.data.length; offset += 4) {
+    const distance = Math.hypot(imageData.data[offset] - background[0], imageData.data[offset + 1] - background[1], imageData.data[offset + 2] - background[2]);
+    const alpha = Math.max(0, Math.min(1, (distance - 16) / 68));
+    imageData.data[offset + 3] = Math.round(alpha * 255);
+  }
+  context.putImageData(imageData, 0, 0);
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((output) => output ? resolve(output) : reject(new Error("Could not create the transparent PNG.")), "image/png"));
+  return URL.createObjectURL(blob);
 }
 
 function loadImage(url: string) {

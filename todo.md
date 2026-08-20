@@ -66,3 +66,9 @@
 - [x] Detect available models through provider catalogs when an API key is added, select the best compatible model, and explicitly label a documented default where a catalog is unavailable.
 - [x] Handle provider quota, rate-limit, authentication, and model-unavailable responses with a usable automatic fallback or clear next-provider instruction before retrying work.
 - [x] Test and publish the multi-provider automatic model-selection and fallback update through GitHub and Vercel.
+- [x] Capture the production errors affecting AI upscaling, background removal, metadata generation, and image-to-prompt generation.
+- [x] Make Image Upscaler worker initialization lazy so browser worker-construction failures fall through to the high-quality local fallback.
+- [x] Add non-crashing Background Remover recovery for worker/model initialization failures and preserve one-credit success-only charging.
+- [ ] Verify live own-key metadata and image-to-prompt generation with a real configured provider after publishing the stability fix.
+- [ ] Verify logged-in production 2×/4× upscaling, background removal, individual PNG, and ZIP output after the stability fix.
+- [ ] Run end-to-end regression checks and publish the complete creator-tool stability fix through GitHub and Vercel.

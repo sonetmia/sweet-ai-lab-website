@@ -68,29 +68,49 @@ export function registerStudioRoutes(app: Express) {
         });
 
       const content = body.image
-        ? [{ type: "image_url", image_url: { url: body.image } }, { type: "text", text: prompt }]
+        ? [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: body.image } }]
         : prompt;
-      const model = tier === "premium" ? "meta-llama/llama-4-maverick" : "meta-llama/llama-4-scout";
-      const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getRequiredEnv("OPENROUTER_API_KEY")}`,
-          "HTTP-Referer": req.protocol + "://" + req.get("host"),
-          "X-Title": "Sweet AI Lab by SONET",
-        },
-        body: JSON.stringify({ model, messages: [{ role: "user", content }], max_tokens: mode === "metadata" ? 1100 : 700 }),
-      });
-      if (!upstream.ok) return res.status(502).json({ error: "generation_provider_unavailable" });
+      const models = tier === "premium"
+        ? ["meta-llama/llama-4-maverick", "meta-llama/llama-4-scout", "qwen/qwen3.6-27b"]
+        : ["meta-llama/llama-4-scout", "qwen/qwen3.6-27b", "meta-llama/llama-4-maverick"];
+      let output = "";
+      let providerDetail = "";
+      for (const model of models) {
+        const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getRequiredEnv("OPENROUTER_API_KEY")}`,
+            "HTTP-Referer": req.protocol + "://" + req.get("host"),
+            "X-Title": "Sweet AI Lab by SONET",
+          },
+          body: JSON.stringify({ model, messages: [{ role: "user", content }], max_tokens: mode === "metadata" ? 1100 : 700 }),
+        });
+        if (!upstream.ok) {
+          try {
+            const payload = await upstream.json() as { error?: { message?: string }; message?: string };
+            providerDetail = payload.error?.message ?? payload.message ?? providerDetail;
+          } catch {
+            providerDetail = providerDetail || `Provider returned ${upstream.status}.`;
+          }
+          continue;
+        }
+        const responseData = await upstream.json() as { choices?: Array<{ message?: { content?: string } }> };
+        output = responseData.choices?.[0]?.message?.content?.trim() ?? "";
+        if (output) break;
+      }
+      if (!output) return res.status(502).json({ error: "generation_provider_unavailable", detail: providerDetail || "All configured generation models were unavailable." });
 
-      const responseData = await upstream.json() as { choices?: Array<{ message?: { content?: string } }> };
-      const output = responseData.choices?.[0]?.message?.content?.trim() ?? "";
-      if (!output) return res.status(502).json({ error: "empty_generation" });
+      let result: ReturnType<typeof parseMetadataResult> | { prompt: string };
+      try {
+        result = mode === "metadata" ? parseMetadataResult(output) : { prompt: output };
+      } catch {
+        return res.status(502).json({ error: "invalid_generation_format", detail: "The provider returned an incomplete result. No credits were deducted; please retry." });
+      }
 
       const { data: debitData, error: debitError } = await userClient.rpc("deduct_credit", { action_type: mode === "metadata" ? "paid_metadata_generation" : "paid_image_to_prompt", amount: creditsRequired });
       if (debitError || !debitData?.success) return res.status(409).json({ error: debitData?.error ?? "credit_debit_failed" });
 
-      const result = mode === "metadata" ? parseMetadataResult(output) : { prompt: output };
       return res.json({ success: true, result, credits: debitData.credits, tier });
     } catch (error) {
       console.error("[Studio API]", error instanceof Error ? error.message : "unknown error");

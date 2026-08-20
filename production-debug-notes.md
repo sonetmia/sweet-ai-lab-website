@@ -34,3 +34,7 @@ GitHub commit `4b0eb7d` deployed without a public rendering regression. The publ
 ## Multi-provider fallback deployment
 
 GitHub commit `e0d1bc0` deployed without a public rendering regression. The production bundle `index-5989a5-e.js` contains the `Together AI`, `SambaNova`, and `Hugging Face` provider labels plus the configured-provider fallback message, confirming that the release source is live. It adds automatic compatible-model selection for own-key providers with a model catalog, clearly labels documented defaults for catalog-less providers, and retries another configured provider when a quota or rate-limit response occurs. Logged-in production validation with the user’s actual keys remains required because provider quotas, account access, and CORS policies are external to the application.
+
+## Creator-tool stability validation
+
+The hosted OpenRouter credential returned `402 Insufficient credits` for a minimal image completion, explaining why the previous default paid path could not generate metadata or prompts. Studio now defaults to the user’s own-key path. In a browser against the local build, both lazy worker modules constructed successfully and the high-quality canvas fallback produced a valid 24 × 16 PNG from a 12 × 8 source. Logged-in production validation remains required for a real image background-removal run and an actual configured own-key generation request.

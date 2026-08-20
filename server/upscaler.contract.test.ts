@@ -6,7 +6,8 @@ describe("browser-local Image Upscaler contract", () => {
     const source = readFileSync(new URL("../client/src/pages/ImageUpscaler.tsx", import.meta.url), "utf8");
     expect(source).toContain("IMAGE UPSCALER");
     expect(source).toContain('action_type: "image_upscale", amount: 2');
-    expect(source).toContain("runAiUpscale");
+    expect(source).toContain("runResilientUpscale");
+    expect(source).toContain("createBrowserUpscaledImage");
     expect(source).toContain('multiple accept="image/*"');
     expect(source).toContain("new JSZip()");
     expect(source).toContain("sweet-ai-lab-ai-upscaled-images.zip");

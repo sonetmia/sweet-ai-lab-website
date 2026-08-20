@@ -1,5 +1,5 @@
 import { AppThemeToggle } from "@/components/AppThemeToggle";
-import { MAX_UPSCALE_EDGE, getUpscaledFilename, type UpscaleFactor } from "@/lib/imageUpscale";
+import { MAX_UPSCALE_EDGE, getUpscaledDimensions, getUpscaledFilename, type UpscaleFactor } from "@/lib/imageUpscale";
 import { supabase } from "@/lib/supabase";
 import JSZip from "jszip";
 import { ArrowLeft, Download, ImagePlus, ImageUp, Loader2, Play, Trash2, UploadCloud, X } from "lucide-react";
@@ -15,7 +15,12 @@ type WorkerResponse = { type: "progress"; factor: UpscaleFactor; percentage: num
 type ModelLoad = { factor: UpscaleFactor; resolve: () => void; reject: (error: Error) => void };
 type ProcessingJob = { resolve: (result: UpscaleResult) => void; reject: (error: Error) => void };
 
-const aiUpscaleWorker = new Worker(new URL("../workers/upscale.worker.ts", import.meta.url), { type: "module" });
+let aiUpscaleWorker: Worker | null = null;
+
+function getAiUpscaleWorker() {
+  if (!aiUpscaleWorker) aiUpscaleWorker = new Worker(new URL("../workers/upscale.worker.ts", import.meta.url), { type: "module" });
+  return aiUpscaleWorker;
+}
 
 export default function ImageUpscaler() {
   const [, navigate] = useLocation();
@@ -24,6 +29,7 @@ export default function ImageUpscaler() {
   const jobsRef = useRef(new Map<string, ProcessingJob>());
   const modelLoadRef = useRef<ModelLoad | null>(null);
   const readyFactorRef = useRef<UpscaleFactor | null>(null);
+  const aiFailureRef = useRef<string | null>(null);
   const [items, setItems] = useState<UpscaleItem[]>([]);
   const [creditCount, setCreditCount] = useState<number | null>(null);
   const [factor, setFactor] = useState<UpscaleFactor>(2);
@@ -31,7 +37,7 @@ export default function ImageUpscaler() {
   const [processing, setProcessing] = useState(false);
   const [zipping, setZipping] = useState(false);
   const [modelState, setModelState] = useState<{ factor: UpscaleFactor | null; progress: number; loading: boolean }>({ factor: null, progress: 0, loading: false });
-  const [notice, setNotice] = useState("Choose multiple images for AI super-resolution. The selected model downloads once and stays cached in your browser.");
+  const [notice, setNotice] = useState("Choose multiple images for browser-local upscaling. AI acceleration is used when supported, with a high-quality local fallback for every supported image.");
 
   useEffect(() => {
     itemsRef.current = items;
@@ -83,9 +89,16 @@ export default function ImageUpscaler() {
         pendingLoad.reject(new Error(data.message));
       }
     };
-    aiUpscaleWorker.addEventListener("message", onWorkerMessage);
+    let activeWorker: Worker | null = null;
+    try {
+      activeWorker = getAiUpscaleWorker();
+      activeWorker.addEventListener("message", onWorkerMessage);
+    } catch (error) {
+      aiFailureRef.current = error instanceof Error ? error.message : "This browser cannot start the optional AI worker.";
+      setNotice("AI acceleration cannot start in this browser, so completed images will use reliable high-quality browser upscaling instead.");
+    }
     return () => {
-      aiUpscaleWorker.removeEventListener("message", onWorkerMessage);
+      activeWorker?.removeEventListener("message", onWorkerMessage);
       itemsRef.current.forEach((item) => {
         URL.revokeObjectURL(item.inputUrl);
         if (item.result) URL.revokeObjectURL(item.result.url);
@@ -154,21 +167,37 @@ export default function ImageUpscaler() {
     return new Promise<void>((resolve, reject) => {
       modelLoadRef.current = { factor: nextFactor, resolve, reject };
       setModelState({ factor: nextFactor, progress: 0, loading: true });
-      aiUpscaleWorker.postMessage({ type: "load", factor: nextFactor });
+      try {
+        getAiUpscaleWorker().postMessage({ type: "load", factor: nextFactor });
+      } catch (error) {
+        modelLoadRef.current = null;
+        setModelState((current) => ({ ...current, loading: false }));
+        reject(error instanceof Error ? error : new Error("The optional AI worker could not be started."));
+      }
     });
   }
 
-  async function runAiUpscale(item: UpscaleItem) {
-    await ensureAiModel(item.factor);
-    const prepared = await createSafeInput(item.inputUrl, item.factor);
-    try {
-      return await new Promise<UpscaleResult>((resolve, reject) => {
-        jobsRef.current.set(item.id, { resolve, reject });
-        aiUpscaleWorker.postMessage({ type: "process", id: item.id, url: prepared.url, factor: item.factor });
-      });
-    } finally {
-      if (prepared.revoke) URL.revokeObjectURL(prepared.url);
+  async function runResilientUpscale(item: UpscaleItem) {
+    if (!aiFailureRef.current) {
+      try {
+        await withTimeout(ensureAiModel(item.factor), 45000, "Optional AI acceleration took too long to load.");
+        const prepared = await createSafeInput(item.inputUrl, item.factor);
+        try {
+          return await new Promise<UpscaleResult>((resolve, reject) => {
+            jobsRef.current.set(item.id, { resolve, reject });
+            getAiUpscaleWorker().postMessage({ type: "process", id: item.id, url: prepared.url, factor: item.factor });
+          });
+        } finally {
+          if (prepared.revoke) URL.revokeObjectURL(prepared.url);
+        }
+      } catch (error) {
+        aiFailureRef.current = error instanceof Error ? error.message : "The optional AI model is unavailable in this browser.";
+        readyFactorRef.current = null;
+        setModelState((current) => ({ ...current, loading: false }));
+        setNotice("AI acceleration is unavailable in this browser, so Sweet AI Lab is using reliable high-quality browser upscaling instead. Successful outputs still cost 2 credits.");
+      }
     }
+    return createBrowserUpscaledImage(item.inputUrl, item.factor);
   }
 
   async function processItems(itemIds: string[]) {
@@ -191,7 +220,7 @@ export default function ImageUpscaler() {
       }
       setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, state: "processing", error: undefined } : entry));
       try {
-        const result = await runAiUpscale(item);
+        const result = await runResilientUpscale(item);
         const { data: debit, error: debitError } = await supabase.rpc("deduct_credit", { action_type: "image_upscale", amount: 2 });
         if (debitError || !debit?.success) {
           URL.revokeObjectURL(result.url);
@@ -207,7 +236,7 @@ export default function ImageUpscaler() {
     }
 
     setProcessing(false);
-    if (completedCount) setNotice(`${completedCount} image${completedCount === 1 ? "" : "s"} completed with AI super-resolution. Two credits were deducted for each successful PNG.`);
+    if (completedCount) setNotice(`${completedCount} image${completedCount === 1 ? "" : "s"} completed locally. Two credits were deducted for each successful PNG.`);
   }
 
   function downloadOne(item: UpscaleItem) {
@@ -264,6 +293,29 @@ async function createSafeInput(sourceUrl: string, factor: UpscaleFactor) {
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((output) => output ? resolve(output) : reject(new Error("Could not prepare this image for AI upscaling.")), "image/png"));
   return { url: URL.createObjectURL(blob), revoke: true };
+}
+
+async function createBrowserUpscaledImage(sourceUrl: string, factor: UpscaleFactor): Promise<UpscaleResult> {
+  const image = await loadImage(sourceUrl);
+  const dimensions = getUpscaledDimensions(image.naturalWidth, image.naturalHeight, factor);
+  if (dimensions.width === image.naturalWidth && dimensions.height === image.naturalHeight) throw new Error("This image is already at the browser's safe processing limit.");
+  const canvas = document.createElement("canvas");
+  canvas.width = dimensions.width;
+  canvas.height = dimensions.height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not prepare the local image canvas.");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, 0, 0, dimensions.width, dimensions.height);
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((output) => output ? resolve(output) : reject(new Error("Could not create the upscaled PNG.")), "image/png"));
+  return { url: URL.createObjectURL(blob), blob, width: dimensions.width, height: dimensions.height };
+}
+
+function withTimeout<T>(promise: Promise<T>, milliseconds: number, message: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(message)), milliseconds);
+    promise.then((value) => { window.clearTimeout(timer); resolve(value); }, (error) => { window.clearTimeout(timer); reject(error); });
+  });
 }
 
 function loadImage(url: string) {
